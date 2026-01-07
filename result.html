@@ -133,6 +133,25 @@
     /* 商品推薦 */
     .productTitle{font-weight:900; margin-bottom:4px;}
     .productMeta{display:flex; gap:8px; align-items:center; margin-top:6px; font-size:12px; color: rgba(24,11,10,.68);}
+
+    /* ✅ 每張卡片固定寬，橫向滑更像商品列 */
+    .productCard{
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      min-width: 220px;     /* 你可調 200/240 */
+      flex: 0 0 220px;
+      scroll-snap-align: start; /* 可選 */
+    }
+    .productImg{
+      width:100%;
+      height:140px;
+      object-fit:cover;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,.08);
+      background:#f3f3f3;
+    }
+    .productBody{padding-top:8px;}
     .productCta{
       margin-left:auto;
       padding:4px 10px;
@@ -144,6 +163,77 @@
       text-decoration:none;
       color: rgba(24,11,10,.86);
     }
+
+    .step{display:none; opacity:0; transition: opacity .35s ease;}
+    .step.visible{display:block; opacity:1;}
+    .detailLink{
+      margin-top:10px;
+      background:none;
+      border:none;
+      color: rgba(24,11,10,.78);
+      font-size:12px;
+      cursor:pointer;
+      text-decoration: underline;
+      padding:0;
+      transition: transform .15s ease;
+    }
+    .detailLink:hover{transform: translateX(2px);}
+    .demoBox{
+      height:80px;
+      border-radius:12px;
+      background:#f7f7f7;
+      border:1px dashed rgba(0,0,0,.12);
+      line-height:80px;
+      text-align:center;
+      color:#aaa;
+      font-size:12px;
+    }
+    .detailActions{display:flex; gap:10px; justify-content:center; margin-top:16px;}
+
+    /* ✅ 橫向商品列（覆蓋 .list 的 column） */
+    #productList{
+      display:flex;
+      flex-direction:row;
+      gap:10px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      padding-bottom:6px;
+      scroll-snap-type: x mandatory;      /* 可選：更像 carousel */
+      -webkit-overflow-scrolling: touch;
+      margin-top:10px;
+    }
+
+    /* ✅ 右邊 sentinel（無限載入觸發點） */
+    #productSentinelX{
+      flex: 0 0 160px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:14px;
+      background: rgba(255,255,255,.45);
+      border: 1px dashed rgba(0,0,0,.14);
+      color: rgba(24,11,10,.65);
+      font-size: 12px;
+      user-select:none;
+      min-height: 210px; /* 讓它看起來像卡片 */
+    }
+
+    /* ✅ 卡片淡入動畫（append 時套用） */
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in{
+      animation: cardFadeIn .35s ease both;
+    }
+
+    /* 可選：美化橫向滾動條 */
+    #productList::-webkit-scrollbar{ height: 10px; }
+    #productList::-webkit-scrollbar-thumb{
+      background: rgba(0,0,0,.12);
+      border-radius: 999px;
+    }
+    #productList::-webkit-scrollbar-track{ background: transparent; }
   </style>
 </head>
 
@@ -175,86 +265,186 @@
       </div>
 
       <div class="body">
-        <div class="grid">
-          <!-- 左：總分 + 雷達 -->
-          <div class="panel">
-            <div class="h">
-              <strong>總覽（Overall）</strong>
-              <span class="chip" id="qualityChip">--</span>
+        <div id="step-3" class="step visible">
+          <div class="grid" id="radarSection">
+            <!-- 左：總分 + 雷達 -->
+            <div class="panel" id="summarySection">
+              <div class="h">
+                <strong>總覽（Overall）</strong>
+                <span class="chip" id="qualityChip">--</span>
+              </div>
+
+              <div class="score">
+                <div class="num" id="overallNum">--</div>
+                <div class="meta" id="overallMeta">
+                  會根據五角指標 + 氣色 + 膚況推估<br />
+                  建議拍攝：自然光、避免背光、距離 30–40cm
+                </div>
+              </div>
+
+              <div style="height:12px;"></div>
+
+              <div class="h">
+                <strong>五角雷達（五項核心）</strong>
+                <span class="chip">0–100</span>
+              </div>
+              <div class="canvasWrap">
+                <canvas id="radar" width="520" height="360"></canvas>
+              </div>
+
+              <div class="mutedText" style="margin-top:10px;">
+                五角建議：五個指標越平均越好；單項過低代表那項需要優先改善。
+              </div>
+              <button class="detailLink" onclick="switchStep('step-3','step-a-detail')">查看詳情建議 →</button>
             </div>
 
-            <div class="score">
-              <div class="num" id="overallNum">--</div>
-              <div class="meta" id="overallMeta">
-                會根據五角指標 + 氣色 + 膚況推估<br />
-                建議拍攝：自然光、避免背光、距離 30–40cm
+            <!-- 右：氣色/膚況摘要 -->
+            <div class="panel">
+              <div class="h">
+                <strong>專業摘要</strong>
+                <span class="chip" id="timestampChip">--</span>
+              </div>
+
+              <div class="list" id="summaryCards"></div>
+
+              <div style="height:30px;"></div>
+              <div class="h">
+                <strong>風險提醒</strong>
+                <span class="chip">建議參考</span>
+              </div>
+              <div class="list" id="riskList"></div>
+              <button class="detailLink" onclick="switchStep('step-3','step-a-detail')">查看詳情建議 →</button>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <!-- 條狀圖 -->
+          <div class="kpi" style="margin-top:12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div class="sub">指標明細（Bar Chart）</div>
+              <span class="tag">越高越好</span>
+            </div>
+            <div id="bars" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <!-- 建議 -->
+          <div class="panel" id="tipsSection">
+            <div class="h">
+              <strong>改善建議（Tips）</strong>
+              <span class="chip" id="tipsCount">0</span>
+            </div>
+            <div class="list" id="tipsList"></div>
+            <button class="detailLink" onclick="switchStep('step-3','step-a-detail')">查看詳情建議 →</button>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <!-- 商品推薦 -->
+          <div class="panel" id="productSection">
+            <div class="h">
+              <strong>商品推薦</strong>
+              <span class="chip" id="productCount">0</span>
+            </div>
+            <div class="list" id="productList"></div>
+          </div>
+        </div>
+
+        <!-- Step A -->
+        <div id="step-a-detail" class="step">
+          <div class="panel">
+            <div class="h">
+              <strong>氣色急救站</strong>
+            </div>
+            <div class="item" style="text-align:center;">
+              <div style="width:100px; height:100px; background:#fdf2f2; border-radius:50%; display:inline-block; border:2px solid rgba(255,157,184,.55); padding-top:30px; box-sizing:border-box;">
+                <b>4.2 / 10</b><br><small>今天狀態不佳</small>
+              </div>
+              <div style="margin-top:12px; font-weight:700; color:#d84315;">好消息：氣色可在 5 分鐘內改善！</div>
+            </div>
+            <div class="item">
+              <div><b>Step 1：臉部按摩 (2分鐘)</b></div>
+              <div class="demoBox">示意教學動畫區</div>
+            </div>
+            <div class="item">
+              <div><b>Step 2：穴位按壓 (1分鐘)</b></div>
+              <div class="demoBox">示意教學動畫區</div>
+            </div>
+            <div class="detailActions">
+              <button class="btn" onclick="switchStep('step-a-detail','step-3')">前往商品推薦</button>
+              <button class="btn" onclick="switchStep('step-a-detail','step-3')">返回報告總覽</button>
+              <button class="btn" onclick="location.href='index.html'">回首頁</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step B -->
+        <div id="step-b-detail" class="step">
+          <div class="panel">
+            <div class="h">
+              <strong>深度問題偵測</strong>
+              <span class="chip">示意</span>
+            </div>
+            <div class="item">
+              <div class="canvasWrap">
+                <canvas id="detailRadar" width="520" height="360"></canvas>
+              </div>
+              <div style="margin-top:10px;">
+                <div><b>異常目標 A：發炎痘痘</b></div>
+                <div class="mutedText">嚴重指數：6.8 (High) / T 字部位</div>
+              </div>
+              <div style="margin-top:10px;">
+                <div><b>異常目標 B：動態細紋</b></div>
+                <div class="mutedText">嚴重指數：6.0 (Med) / 眼尾魚尾紋</div>
               </div>
             </div>
-
-            <div style="height:12px;"></div>
-
-            <div class="h">
-              <strong>五角雷達（五項核心）</strong>
-              <span class="chip">0–100</span>
-            </div>
-            <div class="canvasWrap">
-              <canvas id="radar" width="520" height="360"></canvas>
-            </div>
-
-            <div class="mutedText" style="margin-top:10px;">
-              五角建議：五個指標越平均越好；單項過低代表那項需要優先改善。
+            <div class="detailActions">
+              <button class="btn" onclick="switchStep('step-b-detail','step-3')">返回報告總覽</button>
+              <button class="btn" onclick="location.href='index.html'">回首頁</button>
             </div>
           </div>
+        </div>
 
-          <!-- 右：氣色/膚況摘要 -->
+        <!-- Step C -->
+        <div id="step-c-detail" class="step">
           <div class="panel">
             <div class="h">
-              <strong>專業摘要</strong>
-              <span class="chip" id="timestampChip">--</span>
+              <strong>生活習慣小秘訣</strong>
+              <span class="chip">示意</span>
             </div>
+            <div class="item">
+              <div><b>為什麼最近氣色較差？</b></div>
+              <div class="mutedText">疲勞持續累積時，新陳代謝與修復速度會放慢。身體在提醒您需要更多支持。</div>
+            </div>
+            <div class="item">
+              <div><b>飲食補充建議</b></div>
+              <div class="mutedText">深綠色蔬菜、Omega-3 食物、維生素 C 水果、堅果與全穀類。</div>
+            </div>
+            <div class="detailActions">
+              <button class="btn" onclick="switchStep('step-c-detail','step-3')">返回報告總覽</button>
+              <button class="btn" onclick="location.href='index.html'">回首頁</button>
+            </div>
+          </div>
+        </div>
 
-            <div class="list" id="summaryCards"></div>
-
-            <div style="height:10px;"></div>
+        <!-- Step D -->
+        <div id="step-d-detail" class="step">
+          <div class="panel">
             <div class="h">
-              <strong>風險提醒</strong>
-              <span class="chip">建議參考</span>
+              <strong>智慧選品詳情</strong>
+              <span class="chip">示意</span>
             </div>
-            <div class="list" id="riskList"></div>
+            <div class="item">
+              <div><b>推薦產品</b></div>
+              <div class="mutedText">針對您的膚況，建議使用含保濕與修護成分的產品，提升穩定度。</div>
+            </div>
+            <div class="detailActions">
+              <button class="btn" onclick="switchStep('step-d-detail','step-3')">返回報告總覽</button>
+              <button class="btn" onclick="location.href='index.html'">回首頁</button>
+            </div>
           </div>
-        </div>
-
-        <div style="height:12px;"></div>
-
-        <!-- 條狀圖 -->
-        <div class="kpi" style="margin-top:12px;">
-          <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div class="sub">指標明細（Bar Chart）</div>
-            <span class="tag">越高越好</span>
-          </div>
-          <div id="bars" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
-        </div>
-
-        <div style="height:12px;"></div>
-
-        <!-- 建議 -->
-        <div class="panel">
-          <div class="h">
-            <strong>改善建議（Tips）</strong>
-            <span class="chip" id="tipsCount">0</span>
-          </div>
-          <div class="list" id="tipsList"></div>
-        </div>
-
-        <div style="height:12px;"></div>
-
-        <!-- 商品推薦 -->
-        <div class="panel">
-          <div class="h">
-            <strong>商品推薦</strong>
-            <span class="chip" id="productCount">0</span>
-          </div>
-          <div class="list" id="productList"></div>
         </div>
 
       </div>
@@ -364,8 +554,8 @@
 
       // 背景圈
       ctx.lineWidth = 1;
-      for(let k=1;k<=4;k++){
-        const r = radius * (k/4);
+      for(let k=1;k<=8;k++){
+        const r = radius * (k/8);
         ctx.beginPath();
         for(let i=0;i<N;i++){
           const a = (-Math.PI/2) + (i * 2*Math.PI / N);
@@ -424,7 +614,7 @@
         const x = cx + r * Math.cos(a);
         const y = cy + r * Math.sin(a);
         ctx.beginPath();
-        ctx.arc(x,y,4,0,Math.PI*2);
+        ctx.arc(x,y,6,0,Math.PI*2);
         ctx.fillStyle = "rgba(216,189,91,.95)";
         ctx.fill();
         ctx.strokeStyle = "rgba(255,255,255,.9)";
@@ -434,14 +624,14 @@
     }
 
     const radar = document.getElementById("radar");
-    drawRadar(
-      radar,
-      [metrics.glow, metrics.complexion, metrics.blemish, metrics.oilBalance, metrics.evenness],
-      ["光澤","氣色","瑕疵","油水平衡","均勻度"]
-    );
+    const radarValues = [metrics.glow, metrics.complexion, metrics.blemish, metrics.oilBalance, metrics.evenness];
+    const radarLabels = ["光澤","氣色","瑕疵","油水平衡","均勻度"];
+    drawRadar(radar, radarValues, radarLabels);
+    const detailRadar = document.getElementById("detailRadar");
+    if (detailRadar) drawRadar(detailRadar, radarValues, radarLabels);
 
     // -----------------------------
-    // ✅ 4) Bar Chart（DOM 版，穩定不跑版）
+    // ✅ 4) Bar Chart（DOM 版）
     // -----------------------------
     const bars = document.getElementById("bars");
     const barDefs = [
@@ -507,6 +697,17 @@
       riskList.appendChild(div);
     });
 
+    function switchStep(outId, inId){
+      const outE = document.getElementById(outId);
+      const inE = document.getElementById(inId);
+      if(!outE || !inE) return;
+      outE.classList.remove("visible");
+      setTimeout(() => {
+        inE.classList.add("visible");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 200);
+    }
+
     // -----------------------------
     // ✅ 7) Tips（永遠有內容 + 會依指標連動）
     // -----------------------------
@@ -552,7 +753,7 @@
       "今天狀態差別急著下結論：用 7 天平均值更準。"
     ];
     for(const t of tipFallback){
-      if(tips.length >= 5) break;
+      if(tips.length >= 6) break;
       uniqPush(tips, t);
     }
 
@@ -567,88 +768,119 @@
     });
 
     // -----------------------------
-    // ✅ 8) 商品推薦（永遠有內容 + 會依指標連動）
+    // ✅ 8) 商品推薦（整合：100 張假資料 + 橫向無限滑 + append 淡入）
     // -----------------------------
     const productList = document.getElementById("productList");
 
-    function pickProducts(metrics){
-      const list = [];
-
-      if(metrics.oilBalance < 60){
-        list.push({
-          name: "清爽保濕凝露（油水平衡）",
-          desc: "適合混合偏油/出油不穩。先補水再談控油，皮脂更穩。",
-          tag: "油水平衡",
-          url: "#"
-        });
-      }else{
-        list.push({
-          name: "高保濕乳液/乳霜（鎖水）",
-          desc: "適合偏乾或空調環境。保濕做穩，均勻度與光澤通常一起上升。",
-          tag: "保濕",
-          url: "#"
-        });
-      }
-
-      if(metrics.blemish < 60){
-        list.push({
-          name: "溫和型洗面乳（減少刺激）",
-          desc: "瑕疵偏低時先穩定膚況，避免過度清潔。",
-          tag: "瑕疵改善",
-          url: "#"
-        });
-      }
-
-      if(metrics.evenness < 65){
-        list.push({
-          name: "防曬（SPF50 / PA++++）",
-          desc: "均勻度要穩，防曬是最有效投資。",
-          tag: "均勻度",
-          url: "#"
-        });
-      }
-
-      if(metrics.glow < 65){
-        list.push({
-          name: "保濕精華（提亮/光澤）",
-          desc: "先把保濕層補足，光澤更容易回來。",
-          tag: "光澤",
-          url: "#"
-        });
-      }
-
-      while(list.length < 3){
-        list.push({
-          name: "溫和化妝水（打底補水）",
-          desc: "補水是底盤：氣色、光澤、均勻度都會更穩。",
-          tag: "打底",
-          url: "#"
-        });
-      }
-
-      return list.slice(0,5);
+    // 100 張假資料產生器（測試用）
+    function buildFakeProducts(total = 100){
+      const tags = ["保濕","打底","光澤","均勻度","油水平衡","瑕疵改善","修護","防曬","舒緩","急救"];
+      const descs = [
+        "適合日常維穩，先把底盤顧好。",
+        "針對弱項加強，建議連續使用 7 天觀察趨勢。",
+        "溫和路線，降低刺激、讓膚況更穩。",
+        "加強補水與修護，光澤通常會一起提升。",
+        "搭配防曬更有效，均勻度提升更明顯。"
+      ];
+      return Array.from({ length: total }, (_, i) => {
+        const tag = tags[i % tags.length];
+        const desc = descs[i % descs.length];
+        return {
+          name: `測試商品 ${String(i + 1).padStart(3, "0")}`,
+          desc,
+          tag,
+          url: "#",
+          image: "assets/background.jpg"
+        };
+      });
     }
 
-    const products = (Array.isArray(payload.products) && payload.products.length)
-      ? payload.products
-      : pickProducts(metrics);
+    // ✅ 如果 payload.products 有真資料就用真資料，否則用 100 張假資料
+    // （想固定永遠假資料，就把前半段拿掉，直接 buildFakeProducts(100)）
+    const ALL_PRODUCTS =
+      (Array.isArray(payload.products) && payload.products.length)
+        ? payload.products
+        : buildFakeProducts(100);
 
-    document.getElementById("productCount").textContent = `${products.length} 項`;
+    let page = 0;
+    const PAGE_SIZE = 8;   // 每次往右滑到尾端載入幾張（可改 6/8/10）
+    let loading = false;
 
-    productList.innerHTML = "";
-    products.forEach((p) => {
+    function createProductCard(p){
       const div = document.createElement("div");
-      div.className = "item";
+      div.className = "item productCard fade-in";
+      div.dataset.kind = "product";
+      const imgUrl = p.image || p.img || p.photo || "assets/background.jpg";
       div.innerHTML = `
-        <div class="productTitle">${p.name || "推薦項目"}</div>
-        <div class="mutedText">${p.desc || "建議方向：依你的指標弱項優先補強。"}</div>
-        <div class="productMeta">
-          <span class="badge">${p.tag || "建議"}</span>
-          <a class="productCta" href="${p.url || "#"}" target="_blank" rel="noopener">查看</a>
+        <img class="productImg" src="${imgUrl}" alt="${p.name || "商品"}" />
+        <div class="productBody">
+          <div class="productTitle">${p.name || "推薦項目"}</div>
+          <div class="mutedText">${p.desc || "建議方向：依你的指標弱項優先補強。"}</div>
+          <div class="productMeta">
+            <span class="badge">${p.tag || "建議"}</span>
+            <a class="productCta" href="${p.url || "#"}" target="_blank" rel="noopener">查看</a>
+          </div>
         </div>
       `;
-      productList.appendChild(div);
+      return div;
+    }
+
+    function updateProductCount(){
+      const cards = productList.querySelectorAll('[data-kind="product"]');
+      document.getElementById("productCount").textContent = `${cards.length} 項`;
+    }
+
+    function loadMoreX(){
+      if(loading) return;
+      loading = true;
+
+      const start = page * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
+      const slice = ALL_PRODUCTS.slice(start, end);
+
+      if(slice.length === 0){
+        sentinelXText.textContent = "已經到底了";
+        loading = false;
+        return;
+      }
+
+      slice.forEach(p => {
+        const card = createProductCard(p);
+        // 插在 sentinel 前面（sentinel 永遠在最右邊）
+        productList.insertBefore(card, sentinelX);
+      });
+
+      page++;
+      updateProductCount();
+      loading = false;
+    }
+
+    // 右側 sentinel（無限載入觸發點）
+    const sentinelX = document.createElement("div");
+    sentinelX.id = "productSentinelX";
+    const sentinelXText = document.createElement("div");
+    sentinelXText.textContent = "往右滑載入更多 →";
+    sentinelX.appendChild(sentinelXText);
+
+    // 初始化
+    productList.innerHTML = "";
+    productList.appendChild(sentinelX);
+    page = 0;
+    loadMoreX(); // 先載第一批
+
+    // IntersectionObserver：root 設為橫向容器 productList
+    const ioX = new IntersectionObserver((entries) => {
+      const e = entries[0];
+      if(e.isIntersecting){
+        loadMoreX();
+      }
+    }, {
+      root: productList,
+      rootMargin: "0px 420px 0px 0px", // 提前載入，滑起來更順
+      threshold: 0
     });
+
+    ioX.observe(sentinelX);
   </script>
 </body>
 </html>
