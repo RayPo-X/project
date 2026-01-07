@@ -269,6 +269,7 @@ export function drawRadar(canvas, valuesObj) {
   ctx.setTransform(1,0,0,1,0,0);
 }
 
+
 export function renderMetricBars(container, metrics, config = {}) {
   const items = config.items || Object.keys(metrics);
   const labels = config.labels || {}; // 可把 glow -> 光澤 等等映射

@@ -6,11 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>結果</title>
   <link rel="stylesheet" href="assets/app.css" />
+
   <style>
     /* ✅ 讓結果頁可以滾動（避免 app.css overflow:hidden 造成看不到下面） */
     html, body { height: 100%; overflow: auto; }
 
-    /* 這頁專用微調（不破壞 app.css） */
+    /* ✅ 這頁專用微調（不破壞 app.css） */
     .stage{ align-items:flex-start; }
 
     .grid{
@@ -130,6 +131,22 @@
     }
     .barVal{ width:42px; text-align:right; font-weight:900; font-size:12px; }
 
+    #radarA{
+    width: 450px;     /* 👉 想多小就改這裡 */
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    } 
+
+    #radarB{
+    width: 450px;     /* 👉 想多小就改這裡 */
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    } 
+
+
+
     /* 商品推薦 */
     .productTitle{font-weight:900; margin-bottom:4px;}
     .productMeta{display:flex; gap:8px; align-items:center; margin-top:6px; font-size:12px; color: rgba(24,11,10,.68);}
@@ -139,9 +156,9 @@
       display:flex;
       flex-direction:column;
       overflow:hidden;
-      min-width: 220px;     /* 你可調 200/240 */
+      min-width: 220px;
       flex: 0 0 220px;
-      scroll-snap-align: start; /* 可選 */
+      scroll-snap-align: start;
     }
     .productImg{
       width:100%;
@@ -166,6 +183,7 @@
 
     .step{display:none; opacity:0; transition: opacity .35s ease;}
     .step.visible{display:block; opacity:1;}
+
     .detailLink{
       margin-top:10px;
       background:none;
@@ -178,6 +196,7 @@
       transition: transform .15s ease;
     }
     .detailLink:hover{transform: translateX(2px);}
+
     .demoBox{
       height:80px;
       border-radius:12px;
@@ -188,7 +207,20 @@
       color:#aaa;
       font-size:12px;
     }
-    .detailActions{display:flex; gap:10px; justify-content:center; margin-top:16px;}
+
+    .detailActions{display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap;}
+    .abnormalItem{
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:14px;
+      padding:10px 12px;
+      background: rgba(255,255,255,.70);
+      margin-top:10px;
+    }
+    .largeItem{
+      padding:16px;
+      font-size:14px;
+      line-height:1.7;
+    }
 
     /* ✅ 橫向商品列（覆蓋 .list 的 column） */
     #productList{
@@ -198,9 +230,27 @@
       overflow-x:auto;
       overflow-y:hidden;
       padding-bottom:6px;
-      scroll-snap-type: x mandatory;      /* 可選：更像 carousel */
+      scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
       margin-top:10px;
+    }
+    #productListDetail{
+      display:flex;
+      flex-direction:row;
+      gap:10px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      padding-bottom:6px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      margin-top:10px;
+    }
+    #productListDetail .productCard{
+      flex: 0 0 240px;
+      min-width: 315px;
+    }
+    #productListDetail .productImg{
+      height: 321px;
     }
 
     /* ✅ 右邊 sentinel（無限載入觸發點） */
@@ -215,24 +265,19 @@
       color: rgba(24,11,10,.65);
       font-size: 12px;
       user-select:none;
-      min-height: 210px; /* 讓它看起來像卡片 */
+      min-height: 210px;
     }
 
-    /* ✅ 卡片淡入動畫（append 時套用） */
+    /* ✅ 卡片淡入動畫 */
     @keyframes cardFadeIn {
       from { opacity: 0; transform: translateY(8px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .fade-in{
-      animation: cardFadeIn .35s ease both;
-    }
+    .fade-in{ animation: cardFadeIn .35s ease both; }
 
-    /* 可選：美化橫向滾動條 */
+    /* ✅ 美化橫向滾動條 */
     #productList::-webkit-scrollbar{ height: 10px; }
-    #productList::-webkit-scrollbar-thumb{
-      background: rgba(0,0,0,.12);
-      border-radius: 999px;
-    }
+    #productList::-webkit-scrollbar-thumb{ background: rgba(0,0,0,.12); border-radius: 999px; }
     #productList::-webkit-scrollbar-track{ background: transparent; }
   </style>
 </head>
@@ -261,11 +306,14 @@
           <div class="title">AI 分析報告</div>
           <div class="sub">資料來源：localStorage（沒資料會自動用測試數值）</div>
         </div>
-        <span class="tag" id="scoreTag">Score --</span>
+        
       </div>
 
       <div class="body">
+
+        <!-- ✅ STEP 3：總覽 -->
         <div id="step-3" class="step visible">
+
           <div class="grid" id="radarSection">
             <!-- 左：總分 + 雷達 -->
             <div class="panel" id="summarySection">
@@ -288,6 +336,7 @@
                 <strong>五角雷達（五項核心）</strong>
                 <span class="chip">0–100</span>
               </div>
+
               <div class="canvasWrap">
                 <canvas id="radar" width="520" height="360"></canvas>
               </div>
@@ -295,7 +344,9 @@
               <div class="mutedText" style="margin-top:10px;">
                 五角建議：五個指標越平均越好；單項過低代表那項需要優先改善。
               </div>
-              <button class="detailLink" onclick="switchStep('step-3','step-a-detail')">查看詳情建議 →</button>
+
+              <!-- ✅ 這顆按鈕：目前設計成導到 Step A -->
+              <button class="detailLink" onclick="switchStep('step-3','step-a-detail')">五角雷達分析 詳情 →</button>
             </div>
 
             <!-- 右：氣色/膚況摘要 -->
@@ -312,8 +363,11 @@
                 <strong>風險提醒</strong>
                 <span class="chip">建議參考</span>
               </div>
+
               <div class="list" id="riskList"></div>
-              <button class="detailLink" onclick="switchStep('step-3','step-a-detail')">查看詳情建議 →</button>
+
+              <!-- ✅ 導到 Step B -->
+              <button class="detailLink" onclick="switchStep('step-3','step-b-detail')">專業 與 風險 摘要建議 →</button>
             </div>
           </div>
 
@@ -337,112 +391,218 @@
               <span class="chip" id="tipsCount">0</span>
             </div>
             <div class="list" id="tipsList"></div>
-            <button class="detailLink" onclick="switchStep('step-3','step-a-detail')">查看詳情建議 →</button>
+
+            <!-- ✅ 導到 Step C（詳細版 Tips） -->
+            <button class="detailLink" onclick="switchStep('step-3','step-c-detail')">改善建議 →</button>
           </div>
 
           <div style="height:12px;"></div>
 
           <!-- 商品推薦 -->
-          <div class="panel" id="productSection">
-            <div class="h">
-              <strong>商品推薦</strong>
-              <span class="chip" id="productCount">0</span>
-            </div>
-            <div class="list" id="productList"></div>
+        <div class="panel" id="productSection">
+          <div class="h">
+            <strong>商品推薦</strong>
+            <span class="chip" id="productCount">0</span>
           </div>
+          <div class="list" id="productList"></div>
+          <button class="detailLink" onclick="switchStep('step-3','step-e-detail')">前往商品推薦 →</button>
+        </div>
         </div>
 
-        <!-- Step A -->
+        <!-- ✅ STEP A：氣色急救站（同步分數 + 顯示照片） -->
         <div id="step-a-detail" class="step">
           <div class="panel">
             <div class="h">
               <strong>氣色急救站</strong>
+              <span class="chip">同步顯示</span>
             </div>
-            <div class="item" style="text-align:center;">
-              <div style="width:100px; height:100px; background:#fdf2f2; border-radius:50%; display:inline-block; border:2px solid rgba(255,157,184,.55); padding-top:30px; box-sizing:border-box;">
-                <b>4.2 / 10</b><br><small>今天狀態不佳</small>
+
+            <!-- ✅ A-Photo：使用者照片（有照片才顯示） -->
+            <div class="item" id="aPhotoBlock" style="display:none;">
+              <div style="font-weight:900; margin-bottom:8px;">本次拍攝照片</div>
+              <img id="aUserPhoto" alt="user photo"
+                   style="width:100%; max-height:320px; object-fit:cover; border-radius:14px; border:1px solid rgba(0,0,0,.10);" />
+              <div class="mutedText" style="margin-top:8px;">
+                來源：payload.photo 或 localStorage(user_photo)
               </div>
-              <div style="margin-top:12px; font-weight:700; color:#d84315;">好消息：氣色可在 5 分鐘內改善！</div>
             </div>
+
+            <div class="canvasWrap" style="margin-top:12px;">
+              <canvas id="radarA" width="520" height="360"></canvas>
+            </div>
+
+            <div style="text-align:center; margin-top:10px;">
+              <div style="font-size:12px; color: rgba(24,11,10,.65);">總分（Overall）</div>
+              <div style="font-size:34px; font-weight:900;" id="aOverallNum">--</div>
+            </div>
+            
+            
+
+            <!-- ✅ A-Score：圈圈顯示 0~10 -->
+            <!-- <div class="item" style="text-align:center;">
+              <div style="width:110px; height:110px; background:#fdf2f2; border-radius:50%; display:inline-block; border:2px solid rgba(255,157,184,.55); padding-top:34px; box-sizing:border-box;">
+                <b style="font-size:16px;"><span id="aScore">--</span> / 10</b><br>
+                <small id="aStatusText">--</small>
+              </div>
+              <div id="aHintText" style="margin-top:12px; font-weight:700; color:#d84315;">
+                --
+              </div>
+            </div> -->
+
+            <!-- <div class="aRadarCircle">
+              <canvas id="aRadarMini" width="120" height="120"></canvas> -->
+
+            <!-- ✅ 文字疊在雷達圖上（想不要文字就整段刪掉） -->
+            <!-- <div class="aRadarOverlay">
+              <b style="font-size:14px;"><span id="aScore">--</span> / 10</b><br>
+              <small id="aStatusText">--</small>
+              </div>
+            </div>
+            <div id="aHintText" style="margin-top:12px; font-weight:700; color:#d84315;">--</div> -->
+
             <div class="item">
               <div><b>Step 1：臉部按摩 (2分鐘)</b></div>
-              <div class="demoBox">示意教學動畫區</div>
+              <div class="demoBox">示意教學動畫區（可換成 GIF / MP4）</div>
             </div>
+
             <div class="item">
               <div><b>Step 2：穴位按壓 (1分鐘)</b></div>
-              <div class="demoBox">示意教學動畫區</div>
+              <div class="demoBox">示意教學動畫區（可換成 GIF / MP4）</div>
             </div>
+
             <div class="detailActions">
-              <button class="btn" onclick="switchStep('step-a-detail','step-3')">前往商品推薦</button>
               <button class="btn" onclick="switchStep('step-a-detail','step-3')">返回報告總覽</button>
-              <button class="btn" onclick="location.href='index.html'">回首頁</button>
+              <button class="btn" onclick="switchStep('step-a-detail','step-b-detail')">前往改善建議</button>
             </div>
           </div>
         </div>
 
-        <!-- Step B -->
+        <!-- ✅ STEP B：深度問題偵測 -->
         <div id="step-b-detail" class="step">
           <div class="panel">
             <div class="h">
               <strong>深度問題偵測</strong>
-              <span class="chip">示意</span>
+              <!-- <span class="chip">示意</span> -->
             </div>
+
             <div class="item">
+              <div style="font-weight:900; margin-bottom:8px;">照片預覽</div>
+              <div class="demoBox" style="height:200px;">照片顯示區（之後放後端圖片）</div>
+            </div>
+
+            <div class="canvasWrap" style="margin-top:12px;">
+              <canvas id="radarB" width="520" height="360"></canvas>
+            </div>            
+
+            <!-- <div class="item">
               <div class="canvasWrap">
                 <canvas id="detailRadar" width="520" height="360"></canvas>
-              </div>
-              <div style="margin-top:10px;">
+              </div> -->
+
+              <div class="abnormalItem">
                 <div><b>異常目標 A：發炎痘痘</b></div>
                 <div class="mutedText">嚴重指數：6.8 (High) / T 字部位</div>
               </div>
-              <div style="margin-top:10px;">
+
+              <div class="abnormalItem">
                 <div><b>異常目標 B：動態細紋</b></div>
                 <div class="mutedText">嚴重指數：6.0 (Med) / 眼尾魚尾紋</div>
               </div>
+
+              <div class="abnormalItem">
+                <div><b>異常目標 C：毛孔粗大</b></div>
+                <div class="mutedText">嚴重指數：5.6 (Med) / 鼻翼兩側</div>
+              </div>
+
+              <div class="abnormalItem">
+                <div><b>異常目標 D：暗沉</b></div>
+                <div class="mutedText">嚴重指數：5.2 (Med) / 額頭與兩頰</div>
+              </div>
+
+              <div class="abnormalItem">
+                <div><b>異常目標 E：泛紅</b></div>
+                <div class="mutedText">嚴重指數：4.8 (Low) / 兩頰區域</div>
+              </div>
             </div>
+
             <div class="detailActions">
-              <button class="btn" onclick="switchStep('step-b-detail','step-3')">返回報告總覽</button>
-              <button class="btn" onclick="location.href='index.html'">回首頁</button>
+              <!-- ✅ 修正 outId：從 B 去 C -->
+               <button class="btn" onclick="switchStep('step-b-detail','step-3')">返回報告總覽</button>
+              <button class="btn" onclick="switchStep('step-b-detail','step-c-detail')">前往改善建議</button>
+              <!-- <button class="btn" onclick="location.href='index.html'">回首頁</button> -->
             </div>
           </div>
         </div>
 
-        <!-- Step C -->
+        <!-- STEP C?生活改善建議 -->
         <div id="step-c-detail" class="step">
           <div class="panel">
             <div class="h">
-              <strong>生活習慣小秘訣</strong>
-              <span class="chip">示意</span>
+              <strong>生活改善建議</strong>
+              <span class="chip">小秘訣</span>
             </div>
-            <div class="item">
+
+            <div class="item largeItem">
               <div><b>為什麼最近氣色較差？</b></div>
               <div class="mutedText">疲勞持續累積時，新陳代謝與修復速度會放慢。身體在提醒您需要更多支持。</div>
             </div>
-            <div class="item">
+
+            <div class="item largeItem">
               <div><b>飲食補充建議</b></div>
               <div class="mutedText">深綠色蔬菜、Omega-3 食物、維生素 C 水果、堅果與全穀類。</div>
             </div>
+
+            <div class="item largeItem">
+              <div><b>作息調整</b></div>
+              <div class="mutedText">建議固定就寢時間，連續 7 天觀察氣色變化。</div>
+            </div>
+
             <div class="detailActions">
               <button class="btn" onclick="switchStep('step-c-detail','step-3')">返回報告總覽</button>
-              <button class="btn" onclick="location.href='index.html'">回首頁</button>
+              <button class="btn" onclick="switchStep('step-c-detail','step-e-detail')">前往商品推薦</button>             
+              <!-- <button class="btn" onclick="location.href='index.html'">回首頁</button> -->
             </div>
           </div>
         </div>
 
-        <!-- Step D -->
+        <!-- ✅ STEP D：智慧選品詳情（示意） -->
         <div id="step-d-detail" class="step">
           <div class="panel">
             <div class="h">
               <strong>智慧選品詳情</strong>
               <span class="chip">示意</span>
             </div>
+
             <div class="item">
               <div><b>推薦產品</b></div>
-              <div class="mutedText">針對您的膚況，建議使用含保濕與修護成分的產品，提升穩定度。</div>
+              <div class="mutedText">針對你的弱項指標，推薦保濕／修護／防曬等方向。</div>
             </div>
+
             <div class="detailActions">
               <button class="btn" onclick="switchStep('step-d-detail','step-3')">返回報告總覽</button>
-              <button class="btn" onclick="location.href='index.html'">回首頁</button>
+              <!-- <button class="btn" onclick="location.href='index.html'">回首頁</button> -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ STEP E：商品推薦（內頁） -->
+        <div id="step-e-detail" class="step">
+          <div class="panel">
+            <div class="h">
+              <strong>商品推薦</strong>
+              <span class="chip" id="productCount2">0</span>
+            </div>
+
+            <div class="list" id="productListDetail"></div>
+
+            <div class="item">
+              <div><b>智慧選商品</b></div>
+              <div class="mutedText">依你的弱項指標自動挑選推薦清單，後續可接後端排序與個人化。</div>
+            </div>
+
+            <div class="detailActions">
+              <button class="btn" onclick="switchStep('step-e-detail','step-3')">返回報告總覽</button>
+              <!-- <button class="btn" onclick="location.href='index.html'">回首頁</button> -->
             </div>
           </div>
         </div>
@@ -454,19 +614,20 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // -----------------------------
-    // ✅ 0) 小工具：Toast
-    // -----------------------------
+    // =========================================================
+    // ✅ 0) 小工具：Toast（畫面右下角提示）
+    // =========================================================
     const toastEl = document.getElementById("toast");
     function toast(msg){
+      if(!toastEl) return;
       toastEl.textContent = msg;
       toastEl.classList.add("show");
       setTimeout(()=> toastEl.classList.remove("show"), 1800);
     }
 
-    // -----------------------------
+    // =========================================================
     // ✅ 1) 讀 localStorage（找不到就用 demo）
-    // -----------------------------
+    // =========================================================
     function loadResult(){
       const keys = ["result", "ai_result", "analysis_result", "payload"];
       for(const k of keys){
@@ -507,10 +668,12 @@
       toast("已載入測試數值（demo）");
     }
 
-    // -----------------------------
+    // =========================================================
     // ✅ 2) 正規化 metrics（支援中文/英文欄位 + 防 NaN）
-    // -----------------------------
+    // =========================================================
     const m = payload.metrics || {};
+
+    // ✅ 工具：把任何值安全轉成數字（避免 NaN）
     const toNum = (v, fallback = 0) => {
       const n = Number(v);
       return Number.isFinite(n) ? n : fallback;
@@ -524,26 +687,104 @@
       evenness:   toNum(m.evenness ?? m.均勻度, 75),
     };
 
+    // ✅ overall：如果 payload.overall 沒給，就用五項平均
     const overall = toNum(payload.overall, Math.round(
       (metrics.glow + metrics.complexion + metrics.blemish + metrics.oilBalance + metrics.evenness) / 5
     ));
 
+    // ✅ quality：總體狀態文字（你可調整門檻）
     const quality =
       overall >= 85 ? "狀態極佳" :
       overall >= 75 ? "整體良好" :
       overall >= 60 ? "可再提升" : "需要加強";
 
+    // =========================================================
+    // ✅ 3) Step A：同步分數 + 顯示使用者照片
+    // =========================================================
+
+    // ✅ 0~100 => 0~10（保留 1 位小數）
+    // 想顯示整數：return Math.round(score100 / 10);
+    function toScore10(score100){
+      const n = Number(score100);
+      if(!Number.isFinite(n)) return 0;
+      return Math.round((n / 10) * 10) / 10;
+    }
+
+    function setStepAFromMetrics(){
+      // ✅ 你要讓 Step A 顯示別的指標就改這行：
+      // metrics.complexion / metrics.glow / metrics.evenness ...
+      const score10 = toScore10(metrics.complexion);
+
+      const aScore = document.getElementById("aScore");
+      const aStatusText = document.getElementById("aStatusText");
+      const aHintText = document.getElementById("aHintText");
+
+      if(aScore) aScore.textContent = score10.toFixed(1);
+
+      // ✅ 狀態門檻（你可自行調整）
+      let status = "狀態不錯";
+      if(score10 >= 8.5) status = "今天狀態極佳";
+      else if(score10 >= 7.0) status = "今天狀態良好";
+      else if(score10 >= 6.0) status = "今天略疲憊";
+      else status = "今天狀態不佳";
+      if(aStatusText) aStatusText.textContent = status;
+
+      // ✅ 提示句（你可自己換文案）
+      if(aHintText){
+        aHintText.textContent =
+          score10 < 6.0
+            ? "好消息：氣色可在 5 分鐘內改善！"
+            : "維持住！做 2–3 分鐘按摩會更亮。";
+      }
+    }
+
+    function loadUserPhoto(){
+      const img = document.getElementById("aUserPhoto");
+      const block = document.getElementById("aPhotoBlock");
+      if(!img || !block) return;
+
+      // ✅ 你未來如果把照片放進 payload，就用 payload.photo
+      const fromPayload = payload.photo || payload.image || payload.photoDataUrl;
+
+      // ✅ 你拍照頁存 localStorage 用這些 key 也吃得到
+      // 建議統一存：localStorage.setItem("user_photo", dataURL)
+      const fromLS =
+        localStorage.getItem("user_photo") ||
+        localStorage.getItem("captured_photo") ||
+        localStorage.getItem("photo");
+
+      const src = fromPayload || fromLS;
+
+      if(src){
+        img.src = src;
+        block.style.display = "block";
+      }else{
+        block.style.display = "none";
+      }
+    }
+
+    // =========================================================
+    // ✅ 4) 把總覽上的文字填上去
+    // =========================================================
     document.getElementById("overallNum").textContent = overall;
-    document.getElementById("scoreTag").textContent = `Score ${overall}`;
+    const scoreTag = document.getElementById("scoreTag");
+    if (scoreTag) scoreTag.textContent = `Score ${overall}`;
+    const aOverallNum = document.getElementById("aOverallNum");
+    if (aOverallNum) aOverallNum.textContent = overall;
     document.getElementById("qualityChip").textContent = quality;
 
     const ts = payload.timestamp ? new Date(payload.timestamp) : new Date();
     document.getElementById("timestampChip").textContent = ts.toLocaleString();
 
-    // -----------------------------
-    // ✅ 3) Radar Chart（原生 Canvas）
-    // -----------------------------
+    // 初始化 Step A
+    setStepAFromMetrics();
+    loadUserPhoto();
+
+    // =========================================================
+    // ✅ 5) Radar Chart（原生 Canvas）
+    // =========================================================
     function drawRadar(canvas, values, labels){
+      if(!canvas) return;
       const ctx = canvas.getContext("2d");
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0,0,W,H);
@@ -623,16 +864,30 @@
       }
     }
 
-    const radar = document.getElementById("radar");
+    // const radarValues = [metrics.glow, metrics.complexion, metrics.blemish, metrics.oilBalance, metrics.evenness];
+    // const radarLabels = ["光澤","氣色","瑕疵","油水平衡","均勻度"];
+
     const radarValues = [metrics.glow, metrics.complexion, metrics.blemish, metrics.oilBalance, metrics.evenness];
     const radarLabels = ["光澤","氣色","瑕疵","油水平衡","均勻度"];
-    drawRadar(radar, radarValues, radarLabels);
-    const detailRadar = document.getElementById("detailRadar");
-    if (detailRadar) drawRadar(detailRadar, radarValues, radarLabels);
 
-    // -----------------------------
-    // ✅ 4) Bar Chart（DOM 版）
-    // -----------------------------
+    // ✅ 外頁雷達
+    const radar = document.getElementById("radar");
+    if (radar) drawRadar(radar, radarValues, radarLabels);
+
+    // ✅ 內頁雷達（Step A）
+    const radarA = document.getElementById("radarA");
+    if (radarA) drawRadar(radarA, radarValues, radarLabels);
+
+    // ✅ 如果你還有 Step B 的雷達也要同步，就再加：
+    const radarB = document.getElementById("radarB");
+    if (radarB) drawRadar(radarB, radarValues, radarLabels);
+
+    drawRadar(document.getElementById("radar"), radarValues, radarLabels);
+    drawRadar(document.getElementById("detailRadar"), radarValues, radarLabels);
+
+    // =========================================================
+    // ✅ 6) Bar Chart（DOM 版）
+    // =========================================================
     const bars = document.getElementById("bars");
     const barDefs = [
       ["光澤", metrics.glow],
@@ -655,9 +910,9 @@
       bars.appendChild(row);
     }
 
-    // -----------------------------
-    // ✅ 5) 專業摘要卡
-    // -----------------------------
+    // =========================================================
+    // ✅ 7) 專業摘要卡
+    // =========================================================
     const summaryCards = document.getElementById("summaryCards");
 
     function addCard(title, val, hint){
@@ -679,9 +934,9 @@
     addCard("光澤", metrics.glow, "光澤與光線很相關：自然光、避免直射反光更準。");
     addCard("油水平衡", metrics.oilBalance, "太油或太乾都會影響均勻度與瑕疵，建議觀察 T 字/兩頰差異。");
 
-    // -----------------------------
-    // ✅ 6) 風險提醒
-    // -----------------------------
+    // =========================================================
+    // ✅ 8) 風險提醒
+    // =========================================================
     const riskList = document.getElementById("riskList");
     const risks = [];
     if(metrics.complexion < 60) risks.push("氣色偏低：先確認光線 + 睡眠狀態（此為參考，不代表健康診斷）。");
@@ -697,20 +952,24 @@
       riskList.appendChild(div);
     });
 
+    // =========================================================
+    // ✅ 9) Step 切換（同頁切換）
+    // =========================================================
     function switchStep(outId, inId){
       const outE = document.getElementById(outId);
       const inE = document.getElementById(inId);
       if(!outE || !inE) return;
+
       outE.classList.remove("visible");
       setTimeout(() => {
         inE.classList.add("visible");
         window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 200);
+      }, 120);
     }
 
-    // -----------------------------
-    // ✅ 7) Tips（永遠有內容 + 會依指標連動）
-    // -----------------------------
+    // =========================================================
+    // ✅ 10) Tips（永遠有內容 + 會依指標連動）
+    // =========================================================
     const tipsList = document.getElementById("tipsList");
 
     function uniqPush(arr, txt){
@@ -757,22 +1016,26 @@
       uniqPush(tips, t);
     }
 
+    // ✅ 顯示 Tips（總覽 + 詳細）
     document.getElementById("tipsCount").textContent = `${tips.length} 條`;
 
-    tipsList.innerHTML = "";
-    tips.forEach(t=>{
-      const div = document.createElement("div");
-      div.className = "item";
-      div.textContent = t;
-      tipsList.appendChild(div);
-    });
+    function renderTips(container, list){
+      container.innerHTML = "";
+      list.forEach((t, idx)=>{
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `<span class="badge">#${idx+1}</span> ${t}`;
+        container.appendChild(div);
+      });
+    }
+    renderTips(tipsList, tips.slice(0, 4)); // ✅ 總覽先顯示前 4 條
 
-    // -----------------------------
-    // ✅ 8) 商品推薦（整合：100 張假資料 + 橫向無限滑 + append 淡入）
-    // -----------------------------
+    // =========================================================
+    // ✅ 11) 商品推薦（100 假資料 + 橫向無限滑）
+    // =========================================================
     const productList = document.getElementById("productList");
+    const productListDetail = document.getElementById("productListDetail");
 
-    // 100 張假資料產生器（測試用）
     function buildFakeProducts(total = 100){
       const tags = ["保濕","打底","光澤","均勻度","油水平衡","瑕疵改善","修護","防曬","舒緩","急救"];
       const descs = [
@@ -795,15 +1058,13 @@
       });
     }
 
-    // ✅ 如果 payload.products 有真資料就用真資料，否則用 100 張假資料
-    // （想固定永遠假資料，就把前半段拿掉，直接 buildFakeProducts(100)）
     const ALL_PRODUCTS =
       (Array.isArray(payload.products) && payload.products.length)
         ? payload.products
         : buildFakeProducts(100);
 
     let page = 0;
-    const PAGE_SIZE = 8;   // 每次往右滑到尾端載入幾張（可改 6/8/10）
+    const PAGE_SIZE = 8;
     let loading = false;
 
     function createProductCard(p){
@@ -846,7 +1107,6 @@
 
       slice.forEach(p => {
         const card = createProductCard(p);
-        // 插在 sentinel 前面（sentinel 永遠在最右邊）
         productList.insertBefore(card, sentinelX);
       });
 
@@ -855,18 +1115,29 @@
       loading = false;
     }
 
-    // 右側 sentinel（無限載入觸發點）
+    // sentinel（在最右邊）
     const sentinelX = document.createElement("div");
     sentinelX.id = "productSentinelX";
     const sentinelXText = document.createElement("div");
     sentinelXText.textContent = "往右滑載入更多 →";
     sentinelX.appendChild(sentinelXText);
 
-    // 初始化
+    // 初始化商品列
     productList.innerHTML = "";
     productList.appendChild(sentinelX);
     page = 0;
-    loadMoreX(); // 先載第一批
+    loadMoreX();
+
+    // 商品推薦內頁（簡化：先渲染前 12 筆）
+    if (productListDetail) {
+      productListDetail.innerHTML = "";
+      const detailSlice = ALL_PRODUCTS.slice(0, 12);
+      detailSlice.forEach(p => {
+        productListDetail.appendChild(createProductCard(p));
+      });
+      const productCount2 = document.getElementById("productCount2");
+      if (productCount2) productCount2.textContent = `${detailSlice.length} 項`;
+    }
 
     // IntersectionObserver：root 設為橫向容器 productList
     const ioX = new IntersectionObserver((entries) => {
@@ -876,11 +1147,12 @@
       }
     }, {
       root: productList,
-      rootMargin: "0px 420px 0px 0px", // 提前載入，滑起來更順
+      rootMargin: "0px 420px 0px 0px",
       threshold: 0
     });
 
     ioX.observe(sentinelX);
   </script>
 </body>
+<script src="assets/app.js"></script>
 </html>
