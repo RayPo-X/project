@@ -163,6 +163,8 @@
     let running = false;
     let lastMetrics = null;
 
+    const SKIP_UPLOAD = true;
+
     // =========================
     // cover 對齊：canvas 尺寸跟 cameraBox 一樣
     // =========================
@@ -355,6 +357,16 @@
 
         const blob = await getJpegBlob();
         flashOnce();
+
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+        localStorage.setItem("user_photo", dataUrl);
+
+        if(SKIP_UPLOAD){
+          localStorage.removeItem("result");
+          stopCamera();
+          location.href = "result.html?demo=1";
+          return;
+        }
 
         const form = new FormData();
         form.append("photo", blob, "capture.jpg");
