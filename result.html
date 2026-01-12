@@ -245,13 +245,21 @@
       -webkit-overflow-scrolling: touch;
       margin-top:10px;
     }
-    #productListDetail .productCard{
-      flex: 0 0 240px;
-      min-width: 315px;
+     
+    #productSentinelDetail{
+      flex: 0 0 160px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:14px;
+      background: rgba(255,255,255,.45);
+      border: 1px dashed rgba(0,0,0,.14);
+      color: rgba(24,11,10,.65);
+      font-size: 12px;
+      user-select:none;
+      min-height: 210px;
     }
-    #productListDetail .productImg{
-      height: 321px;
-    }
+
 
     /* ✅ 右邊 sentinel（無限載入觸發點） */
     #productSentinelX{
@@ -279,6 +287,9 @@
     #productList::-webkit-scrollbar{ height: 10px; }
     #productList::-webkit-scrollbar-thumb{ background: rgba(0,0,0,.12); border-radius: 999px; }
     #productList::-webkit-scrollbar-track{ background: transparent; }
+    #productListDetail::-webkit-scrollbar{ height: 10px; }
+    #productListDetail::-webkit-scrollbar-thumb{ background: rgba(0,0,0,.12); border-radius: 999px; }
+    #productListDetail::-webkit-scrollbar-track{ background: transparent; }
   </style>
 </head>
 
@@ -1058,14 +1069,25 @@
       });
     }
 
+    const backendProducts = Array.isArray(payload.products) ? payload.products.filter(Boolean) : [];
+    const TARGET = 100;
+
     const ALL_PRODUCTS =
-      (Array.isArray(payload.products) && payload.products.length)
-        ? payload.products
-        : buildFakeProducts(100);
+      backendProducts.length >= TARGET
+        ? backendProducts.slice(0, TARGET)
+        : backendProducts.concat(buildFakeProducts(TARGET - backendProducts.length));
+
+    // const ALL_PRODUCTS =
+    //   (Array.isArray(payload.products) && payload.products.length)
+    //     ? payload.products
+    //     : buildFakeProducts(100);
 
     let page = 0;
     const PAGE_SIZE = 8;
     let loading = false;
+    let pageDetail = 0;
+    const PAGE_SIZE_DETAIL = 8;
+    let loadingDetail = false;
 
     function createProductCard(p){
       const div = document.createElement("div");
@@ -1089,6 +1111,12 @@
     function updateProductCount(){
       const cards = productList.querySelectorAll('[data-kind="product"]');
       document.getElementById("productCount").textContent = `${cards.length} 項`;
+    }
+    function updateProductCount2(){
+      if(!productListDetail) return;
+      const cards = productListDetail.querySelectorAll('[data-kind="product"]');
+      const productCount2 = document.getElementById("productCount2");
+      if (productCount2) productCount2.textContent = `${cards.length} 項`;
     }
 
     function loadMoreX(){
@@ -1115,6 +1143,30 @@
       loading = false;
     }
 
+    function loadMoreDetail(){
+      if(!productListDetail || loadingDetail) return;
+      loadingDetail = true;
+
+      const start = pageDetail * PAGE_SIZE_DETAIL;
+      const end = start + PAGE_SIZE_DETAIL;
+      const slice = ALL_PRODUCTS.slice(start, end);
+
+      if(slice.length === 0){
+        sentinelDetailText.textContent = "已經到底了";
+        loadingDetail = false;
+        return;
+      }
+
+      slice.forEach(p => {
+        const card = createProductCard(p);
+        productListDetail.insertBefore(card, sentinelDetail);
+      });
+
+      pageDetail++;
+      updateProductCount2();
+      loadingDetail = false;
+    }
+
     // sentinel（在最右邊）
     const sentinelX = document.createElement("div");
     sentinelX.id = "productSentinelX";
@@ -1122,22 +1174,26 @@
     sentinelXText.textContent = "往右滑載入更多 →";
     sentinelX.appendChild(sentinelXText);
 
+    const sentinelDetail = document.createElement("div");
+    sentinelDetail.id = "productSentinelDetail";
+    const sentinelDetailText = document.createElement("div");
+    sentinelDetailText.textContent = "往右滑載入更多 →";
+    sentinelDetail.appendChild(sentinelDetailText);
+
     // 初始化商品列
     productList.innerHTML = "";
     productList.appendChild(sentinelX);
     page = 0;
     loadMoreX();
 
-    // 商品推薦內頁（簡化：先渲染前 12 筆）
+    // 商品推薦內頁（同外頁樣式 + 橫向滑動）
     if (productListDetail) {
       productListDetail.innerHTML = "";
-      const detailSlice = ALL_PRODUCTS.slice(0, 12);
-      detailSlice.forEach(p => {
-        productListDetail.appendChild(createProductCard(p));
-      });
-      const productCount2 = document.getElementById("productCount2");
-      if (productCount2) productCount2.textContent = `${detailSlice.length} 項`;
+      productListDetail.appendChild(sentinelDetail);
+      pageDetail = 0;
+      loadMoreDetail();
     }
+
 
     // IntersectionObserver：root 設為橫向容器 productList
     const ioX = new IntersectionObserver((entries) => {
@@ -1152,6 +1208,21 @@
     });
 
     ioX.observe(sentinelX);
+
+    if (productListDetail) {
+      const ioDetail = new IntersectionObserver((entries) => {
+        const e = entries[0];
+        if(e.isIntersecting){
+          loadMoreDetail();
+        }
+      }, {
+        root: productListDetail,
+        rootMargin: "0px 420px 0px 0px",
+        threshold: 0
+      });
+
+      ioDetail.observe(sentinelDetail);
+    }
   </script>
 </body>
 <script src="assets/app.js"></script>

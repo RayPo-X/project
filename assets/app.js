@@ -321,3 +321,4 @@ export function renderMetricBars(container, metrics, config = {}) {
     container.appendChild(row);
   });
 }
+
