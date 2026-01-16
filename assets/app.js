@@ -69,7 +69,13 @@ export async function requireLogin({ silent = false } = {}) {
     }
   }
 
-  if (!silent) location.href = "login.html";
+  if (!silent) {
+    if (window.APP_SINGLE) {
+      location.hash = "#login";
+    } else {
+      location.href = "login.html";
+    }
+  }
   return false;
 }
 
@@ -99,7 +105,11 @@ export async function doLogin(username, password) {
 export function logout() {
   setLoggedIn(false);
   localStorage.removeItem(RESULT_KEY);
-  location.href = "index.html";
+  if (window.APP_SINGLE) {
+    location.hash = "#home";
+  } else {
+    location.href = "index.html";
+  }
 }
 
 // ---- Result storage ----
