@@ -7,7 +7,451 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>AI 氣色 × 膚況顧問</title>
   <link rel="stylesheet" href="assets/app.css" />
+
+  <!-- 引入 Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600;900&family=Shippori+Mincho:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
   <style>
+    /* =========================================
+       核心設定 (Core)
+       ========================================= */
+    :root {
+      --transition-speed: 0.4s;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      transition: background-color var(--transition-speed), color var(--transition-speed);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      /* 防止手機橫向滾動 */
+    }
+
+    /* 背景紋理層 */
+    .bg-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+      pointer-events: none;
+      transition: opacity var(--transition-speed);
+    }
+
+    /* =========================================
+       通用版面 (Layout)
+       ========================================= */
+    header {
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all var(--transition-speed);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-container {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-shape {
+      width: 100%;
+      height: 100%;
+      transition: all var(--transition-speed);
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: 0.05em;
+      transition: color var(--transition-speed);
+    }
+
+    .brand-text p {
+      margin: 4px 0 0 0;
+      font-size: 0.75rem;
+      opacity: 0.7;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .stage {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* Standard Card adjustments */
+    .card {
+      width: 100%;
+      max-width: 380px;
+      /* Default max-width adjusted */
+      position: relative;
+      transition: all var(--transition-speed);
+      overflow: hidden;
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--transition-speed);
+    }
+
+    .card-head .title {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .card-head .sub {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .tag {
+      padding: 4px 10px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .kpi-item .label {
+      font-size: 0.75rem;
+      opacity: 0.6;
+      margin-bottom: 8px;
+    }
+
+    .kpi-item .value {
+      font-size: 1.6rem;
+      font-weight: 500;
+      transition: color var(--transition-speed);
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn {
+      width: auto;
+      min-width: 120px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Toast Notification Style */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      z-index: 999;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* =========================================
+       THEME A: 東京．表參道 (Tokyo Omotesando)
+       使用 class="theme-tokyo" 啟用
+       ========================================= */
+    body.theme-tokyo {
+      --bg-color: #f7f6f2;
+      --text-color: #3e3a39;
+      --card-bg: #ffffff;
+      --accent-color: #a63737;
+      --font-main: 'Shippori Mincho', 'Noto Serif TC', serif;
+      --font-ui: 'Noto Sans TC', sans-serif;
+    }
+
+    body.theme-tokyo {
+      font-family: var(--font-main);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    body.theme-tokyo .bg-layer {
+      /* 和紙紋理 SVG */
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 2.24 5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 2.24 5 5 2.24 5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%239C92AC' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+      opacity: 1;
+    }
+
+    body.theme-tokyo .logo-shape {
+      border: 2px solid var(--accent-color);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.theme-tokyo .logo-shape::after {
+      content: '肌';
+      color: var(--accent-color);
+      font-family: var(--font-main);
+      font-weight: 900;
+      font-size: 24px;
+    }
+
+    body.theme-tokyo .card {
+      background: #fff;
+      border: 1px solid #e6e6e6;
+      border-radius: 2px;
+      padding: 24px;
+      max-width: 380px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    }
+
+    body.theme-tokyo .card-head {
+      border-bottom: 1px solid #eee;
+    }
+
+    body.theme-tokyo .card-head .title {
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    body.theme-tokyo .kpi-item .value {
+      font-family: var(--font-ui);
+      font-weight: 300;
+      color: var(--text-color);
+    }
+
+    body.theme-tokyo .btn-primary {
+      background: #2b2b2b;
+      color: #fff;
+      border-radius: 2px;
+      font-family: var(--font-ui);
+      letter-spacing: 2px;
+    }
+
+    body.theme-tokyo .btn-primary:hover {
+      background: #4a4a4a;
+    }
+
+    body.theme-tokyo .btn-outline {
+      background: transparent;
+      border: 1px solid #ccc;
+      color: #666;
+      border-radius: 2px;
+    }
+
+    body.theme-tokyo .tag {
+      background: #f0f0f0;
+      color: #333;
+      border-radius: 2px;
+      font-family: var(--font-ui);
+    }
+
+    /* =========================================
+       THEME B: 醫美．實驗室 (Derma Lab Pro)
+       使用 class="theme-lab" 啟用
+       ========================================= */
+    body.theme-lab {
+      --bg-color: #f4f7f9;
+      --text-color: #1e293b;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --accent-color: #0ea5e9;
+      --secondary-accent: #0284c7;
+      --font-main: 'Noto Sans TC', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body.theme-lab {
+      font-family: var(--font-main);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    body.theme-lab .bg-layer {
+      /* 科技網格 CSS */
+      background-image:
+        linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
+      background-size: 20px 20px;
+      opacity: 1;
+    }
+
+    body.theme-lab header {
+      background: #fff;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+    }
+
+    body.theme-lab .logo-shape {
+      background: var(--accent-color);
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+    }
+
+    body.theme-lab .logo-shape::before,
+    body.theme-lab .logo-shape::after {
+      content: '';
+      position: absolute;
+      background: #fff;
+      border-radius: 2px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    body.theme-lab .logo-shape::before {
+      width: 4px;
+      height: 20px;
+    }
+
+    body.theme-lab .logo-shape::after {
+      width: 20px;
+      height: 4px;
+    }
+
+    body.theme-lab .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+      padding: 32px;
+      border: 1px solid rgba(14, 165, 233, 0.1);
+    }
+
+    body.theme-lab .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-color), #6366f1);
+    }
+
+    body.theme-lab .card-head .title {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    body.theme-lab .card-head .sub {
+      color: #64748b;
+    }
+
+    body.theme-lab .kpi-item .value {
+      font-family: var(--font-mono);
+      color: var(--accent-color);
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    body.theme-lab .kpi-item .label {
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    body.theme-lab .btn {
+      border-radius: 50px;
+      font-weight: 600;
+    }
+
+    body.theme-lab .btn-primary {
+      background: linear-gradient(135deg, var(--accent-color), var(--secondary-accent));
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    }
+
+    body.theme-lab .btn-primary:hover {
+      box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+      transform: translateY(-1px);
+    }
+
+    body.theme-lab .btn-outline {
+      background: transparent;
+      border: 2px solid #e2e8f0;
+      color: #64748b;
+    }
+
+    body.theme-lab .btn-outline:hover {
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+
+    body.theme-lab .tag {
+      background: rgba(14, 165, 233, 0.1);
+      color: var(--accent-color);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    body.theme-lab .tag::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--accent-color);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-color);
+    }
+
     .page {
       display: none;
     }
@@ -571,14 +1015,17 @@
   </style>
 </head>
 
-<body>
-  <div class="bg-glass"></div>
+<body class="theme-tokyo">
+  <div class="bg-layer"></div>
+  <!-- <div class="bg-glass"></div> -->
 
   <section class="page active" data-page="home">
     <header>
       <div class="brand">
-        <div class="logo"></div>
-        <div>
+        <div class="logo-container">
+          <div class="logo-shape"></div>
+        </div>
+        <div class="brand-text">
           <h1>AI 氣色 × 膚況顧問</h1>
           <p>首頁 / 入口</p>
         </div>
@@ -623,8 +1070,10 @@
   <section class="page" data-page="survey">
     <header>
       <div class="brand">
-        <div class="logo"></div>
-        <div>
+        <div class="logo-container">
+          <div class="logo-shape"></div>
+        </div>
+        <div class="brand-text">
           <h1>問卷</h1>
           <p>先填問卷 → 再拍照 → 合併分析</p>
         </div>
@@ -698,8 +1147,10 @@
   <section class="page" data-page="analyze">
     <header>
       <div class="brand">
-        <div class="logo"></div>
-        <div>
+        <div class="logo-container">
+          <div class="logo-shape"></div>
+        </div>
+        <div class="brand-text">
           <h1>照相</h1>
           <p>拍照頁面</p>
         </div>
@@ -724,8 +1175,10 @@
   <section class="page" data-page="result">
     <header>
       <div class="brand">
-        <div class="logo"></div>
-        <div>
+        <div class="logo-container">
+          <div class="logo-shape"></div>
+        </div>
+        <div class="brand-text">
           <h1>結果</h1>
           <p>五角分析 × 氣色 × 膚況 × 建議</p>
         </div>
