@@ -1,5 +1,6 @@
 ﻿<!doctype html>
 <html lang="zh-TW">
+
 <head>
   <meta charset="utf-8" />
   <meta name="robots" content="noindex, nofollow">
@@ -7,382 +8,569 @@
   <title>AI 氣色 × 膚況顧問</title>
   <link rel="stylesheet" href="assets/app.css" />
   <style>
-    .page{display:none;}
-    .page.active{display:block;}
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
 
     /* ===== Survey styles ===== */
-    .q{margin-top:12px;}
-    .q label{display:block; font-size:13px; color:var(--muted); margin-bottom:8px;}
-    .opts{display:flex; gap:10px; flex-wrap:wrap;}
-    .opt{
-      flex:1 1 160px;
-      padding:10px 12px;
-      border-radius:14px;
-      background: rgba(255,255,255,.62);
-      border: 1px solid rgba(0,0,0,.08);
-      cursor:pointer;
-      user-select:none;
+    .q {
+      margin-top: 12px;
     }
-    .opt input{margin-right:8px;}
-    .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:14px;}
+
+    .q label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .opts {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .opt {
+      flex: 1 1 160px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .62);
+      border: 1px solid rgba(0, 0, 0, .08);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .opt input {
+      margin-right: 8px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 14px;
+    }
 
     /* ===== Analyze styles ===== */
-    #cameraBox{
-      width: 360px; height: 480px;
+    #cameraBox {
+      width: 360px;
+      height: 480px;
       border-radius: 22px;
-      overflow:hidden;
-      position:relative;
-      background: rgba(0,0,0,.25);
+      overflow: hidden;
+      position: relative;
+      background: rgba(0, 0, 0, .25);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(0,0,0,.08);
-      box-shadow: 0 20px 70px rgba(0,0,0,.18);
+      border: 1px solid rgba(0, 0, 0, .08);
+      box-shadow: 0 20px 70px rgba(0, 0, 0, .18);
     }
 
     /* video + canvas cover 疊滿 */
-    #video, #meshCanvas{
-      position:absolute; inset:0;
-      width:100%; height:100%;
+    #video,
+    #meshCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
     }
 
     /* 鏡像一致 */
-    #video{ transform: scaleX(-1); }
-    #meshCanvas{
+    #video {
       transform: scaleX(-1);
-      pointer-events:none;
-      z-index:2;
     }
 
-    .hint{
-      position:absolute; top:14px; left:12px; right:12px;
-      padding:10px 12px; border-radius:14px;
-      background: rgba(0,0,0,.26);
-      border:1px solid rgba(255,255,255,.22);
-      color: rgba(255,255,255,.92);
-      font-size:13px; letter-spacing:.6px; text-align:center;
+    #meshCanvas {
+      transform: scaleX(-1);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .hint {
+      position: absolute;
+      top: 14px;
+      left: 12px;
+      right: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, .26);
+      border: 1px solid rgba(255, 255, 255, .22);
+      color: rgba(255, 255, 255, .92);
+      font-size: 13px;
+      letter-spacing: .6px;
+      text-align: center;
       z-index: 4;
     }
 
-    #faceGuide{
-      position:absolute; inset: 74px 44px 98px 44px;
+    #faceGuide {
+      position: absolute;
+      inset: 74px 44px 98px 44px;
       border-radius: 999px;
-      border:2px dashed rgba(255,255,255,.65);
-      pointer-events:none;
+      border: 2px dashed rgba(255, 255, 255, .65);
+      pointer-events: none;
       animation: pulse 2.5s infinite ease-in-out;
       z-index: 3;
     }
-    @keyframes pulse{
-      0%{opacity:.35;transform:scale(.985)}
-      50%{opacity:.85;transform:scale(1)}
-      100%{opacity:.35;transform:scale(.985)}
+
+    @keyframes pulse {
+      0% {
+        opacity: .35;
+        transform: scale(.985)
+      }
+
+      50% {
+        opacity: .85;
+        transform: scale(1)
+      }
+
+      100% {
+        opacity: .35;
+        transform: scale(.985)
+      }
     }
 
-    #captureBtn{
-      position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
-      width:76px; height:76px; border-radius:999px;
+    #captureBtn {
+      position: absolute;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      width: 76px;
+      height: 76px;
+      border-radius: 999px;
       background:
-        radial-gradient(circle at 30% 30%, rgba(255,255,255,.75), rgba(255,255,255,0) 45%),
-        linear-gradient(135deg, rgba(255,157,184,.95), rgba(242,216,140,.92));
-      border:6px solid rgba(255,255,255,.92);
-      box-shadow: 0 10px 24px rgba(255,157,184,.22), 0 26px 60px rgba(0,0,0,.25);
-      cursor:pointer;
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, .75), rgba(255, 255, 255, 0) 45%),
+        linear-gradient(135deg, rgba(255, 157, 184, .95), rgba(242, 216, 140, .92));
+      border: 6px solid rgba(255, 255, 255, .92);
+      box-shadow: 0 10px 24px rgba(255, 157, 184, .22), 0 26px 60px rgba(0, 0, 0, .25);
+      cursor: pointer;
       z-index: 5;
     }
 
-    #cameraBox.loading::after{
-      content:"AI 分析中…";
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      background: rgba(10,14,24,.62);
-      font-size:18px; letter-spacing:2px;
+    #cameraBox.loading::after {
+      content: "AI 分析中…";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 14, 24, .62);
+      font-size: 18px;
+      letter-spacing: 2px;
       z-index: 10;
     }
 
-    #flash{
-      position:fixed; inset:0;
-      background:#fff; opacity:0;
-      pointer-events:none;
-      transition:opacity .15s;
+    #flash {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s;
       z-index: 999;
     }
 
-    @media (max-width: 920px){
-      #cameraBox{ width:min(92vw,420px); height:min(128vw,560px); }
+    @media (max-width: 920px) {
+      #cameraBox {
+        width: min(92vw, 420px);
+        height: min(128vw, 560px);
+      }
     }
 
     /* ===== Result styles ===== */
-    html, body { height: 100%; overflow: auto; }
-    .stage{ align-items:flex-start; }
+    html,
+    body {
+      height: 100%;
+      overflow: auto;
+    }
 
-    .grid{
-      display:grid;
+    .stage {
+      align-items: flex-start;
+    }
+
+    .grid {
+      display: grid;
       grid-template-columns: 1.15fr .85fr;
-      gap:12px;
-    }
-    @media (max-width: 900px){
-      .grid{grid-template-columns: 1fr;}
+      gap: 12px;
     }
 
-    .panel{
-      padding:14px;
-      border-radius:16px;
-      background: rgba(255,255,255,.62);
-      border: 1px solid rgba(0,0,0,.08);
-      box-shadow: 0 18px 60px rgba(0,0,0,.10);
-      color: rgba(24,11,10,.92);
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
 
-    .panel .h{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
+    .panel {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .62);
+      border: 1px solid rgba(0, 0, 0, .08);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .10);
+      color: rgba(24, 11, 10, .92);
     }
 
-    .panel .h strong{
-      font-size:13px;
-      letter-spacing:.8px;
+    body.theme-tokyo .card {
+      background: #fff;
+      border: 1px solid #e6e6e6;
+      border-radius: 2px;
+      padding: 24px;
+      max-width: 380px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
     }
 
-    .chip{
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      border:1px solid rgba(0,0,0,.10);
-      background: rgba(255,255,255,.7);
-      white-space:nowrap;
+    .panel .h {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
-    .score{
-      display:flex;
-      align-items:flex-end;
-      gap:12px;
-    }
-    .score .num{
-      font-size:46px;
-      font-weight:900;
-      letter-spacing:1px;
-      line-height:1;
-      background: linear-gradient(135deg, rgba(255,157,184,.95), rgba(216,189,91,.95));
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-    }
-    .score .meta{
-      font-size:12px;
-      color: rgba(24,11,10,.70);
-      line-height:1.5;
+    .panel .h strong {
+      font-size: 13px;
+      letter-spacing: .8px;
     }
 
-    .canvasWrap{
-      border-radius:16px;
-      overflow:hidden;
-      border:1px solid rgba(0,0,0,.10);
-      background: rgba(255,255,255,.55);
+    .chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(0, 0, 0, .10);
+      background: rgba(255, 255, 255, .7);
+      white-space: nowrap;
     }
-    canvas{display:block; width:100%; height:auto;}
 
-    .list{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
-    .item{
-      padding:10px 12px;
-      border-radius:14px;
-      background: rgba(255,255,255,.70);
-      border: 1px solid rgba(0,0,0,.08);
-      color: rgba(24,11,10,.90);
-      font-size:13px;
-      line-height:1.5;
+    .score {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
     }
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      border:1px solid rgba(0,0,0,.10);
-      background: rgba(255,255,255,.85);
-      margin-right:8px;
-      white-space:nowrap;
-    }
-    .mutedText{color: rgba(24,11,10,.68); font-size:12px; line-height:1.5;}
 
-    .barRow{
-      display:flex; align-items:center; gap:12px;
-      padding:10px 12px;
-      border-radius:14px;
-      background: rgba(255,255,255,.62);
-      border: 1px solid rgba(0,0,0,.08);
+    .score .num {
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      line-height: 1;
+      background: linear-gradient(135deg, rgba(255, 157, 184, .95), rgba(216, 189, 91, .95));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
-    .barLabel{ width:110px; font-size:12px; color: rgba(24,11,10,.74); }
-    .barTrack{
-      flex:1;
-      height:12px;
-      border-radius:999px;
-      background: rgba(0,0,0,.10);
-      overflow:hidden;
-    }
-    .barFill{
-      height:100%;
-      width:0%;
-      border-radius:999px;
-      background: linear-gradient(135deg, rgba(242,216,140,.95), rgba(255,157,184,.85));
-    }
-    .barVal{ width:42px; text-align:right; font-weight:900; font-size:12px; }
 
-    #radarA{
+    .score .meta {
+      font-size: 12px;
+      color: rgba(24, 11, 10, .70);
+      line-height: 1.5;
+    }
+
+    .canvasWrap {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, .10);
+      background: rgba(255, 255, 255, .55);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .item {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .70);
+      border: 1px solid rgba(0, 0, 0, .08);
+      color: rgba(24, 11, 10, .90);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(0, 0, 0, .10);
+      background: rgba(255, 255, 255, .85);
+      margin-right: 8px;
+      white-space: nowrap;
+    }
+
+    .mutedText {
+      color: rgba(24, 11, 10, .68);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .barRow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .62);
+      border: 1px solid rgba(0, 0, 0, .08);
+    }
+
+    .barLabel {
+      width: 110px;
+      font-size: 12px;
+      color: rgba(24, 11, 10, .74);
+    }
+
+    .barTrack {
+      flex: 1;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .10);
+      overflow: hidden;
+    }
+
+    .barFill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(242, 216, 140, .95), rgba(255, 157, 184, .85));
+    }
+
+    .barVal {
+      width: 42px;
+      text-align: right;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    #radarA {
       width: 450px;
       height: auto;
       display: block;
       margin: 0 auto;
     }
 
-    #radarB{
+    #radarB {
       width: 450px;
       height: auto;
       display: block;
       margin: 0 auto;
     }
 
-    .productTitle{font-weight:900; margin-bottom:4px;}
-    .productMeta{display:flex; gap:8px; align-items:center; margin-top:6px; font-size:12px; color: rgba(24,11,10,.68);}
+    .productTitle {
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
 
-    .productCard{
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
+    .productMeta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 12px;
+      color: rgba(24, 11, 10, .68);
+    }
+
+    .productCard {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       min-width: 220px;
       flex: 0 0 220px;
       scroll-snap-align: start;
     }
-    .productImg{
-      width:100%;
-      height:140px;
-      object-fit:cover;
-      border-radius:10px;
-      border:1px solid rgba(0,0,0,.08);
-      background:#f3f3f3;
-    }
-    .productBody{padding-top:8px;}
-    .productCta{
-      margin-left:auto;
-      padding:4px 10px;
-      border-radius:999px;
-      border:1px solid rgba(0,0,0,.12);
-      background: rgba(255,255,255,.75);
-      font-size:12px;
-      cursor:pointer;
-      text-decoration:none;
-      color: rgba(24,11,10,.86);
+
+    .productImg {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 0, 0, .08);
+      background: #f3f3f3;
     }
 
-    .step{display:none; opacity:0; transition: opacity .35s ease;}
-    .step.visible{display:block; opacity:1;}
+    .productBody {
+      padding-top: 8px;
+    }
 
-    .detailLink{
-      margin-top:10px;
-      background:none;
-      border:none;
-      color: rgba(24,11,10,.78);
-      font-size:12px;
-      cursor:pointer;
+    .productCta {
+      margin-left: auto;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 0, 0, .12);
+      background: rgba(255, 255, 255, .75);
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      color: rgba(24, 11, 10, .86);
+    }
+
+    .step {
+      display: none;
+      opacity: 0;
+      transition: opacity .35s ease;
+    }
+
+    .step.visible {
+      display: block;
+      opacity: 1;
+    }
+
+    .detailLink {
+      margin-top: 10px;
+      background: none;
+      border: none;
+      color: rgba(24, 11, 10, .78);
+      font-size: 12px;
+      cursor: pointer;
       text-decoration: underline;
-      padding:0;
+      padding: 0;
       transition: transform .15s ease;
     }
-    .detailLink:hover{transform: translateX(2px);}
 
-    .demoBox{
-      height:80px;
-      border-radius:12px;
-      background:#f7f7f7;
-      border:1px dashed rgba(0,0,0,.12);
-      line-height:80px;
-      text-align:center;
-      color:#aaa;
-      font-size:12px;
+    .detailLink:hover {
+      transform: translateX(2px);
     }
 
-    .detailActions{display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap;}
-    .abnormalItem{
-      border:1px solid rgba(0,0,0,.08);
-      border-radius:14px;
-      padding:10px 12px;
-      background: rgba(255,255,255,.70);
-      margin-top:10px;
-    }
-    .largeItem{
-      padding:16px;
-      font-size:14px;
-      line-height:1.7;
-    }
-
-    #productList{
-      display:flex;
-      flex-direction:row;
-      gap:10px;
-      overflow-x:auto;
-      overflow-y:hidden;
-      padding-bottom:6px;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      margin-top:10px;
-    }
-    #productListDetail{
-      display:flex;
-      flex-direction:row;
-      gap:10px;
-      overflow-x:auto;
-      overflow-y:hidden;
-      padding-bottom:6px;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      margin-top:10px;
-    }
-
-    #productSentinelDetail{
-      flex: 0 0 160px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:14px;
-      background: rgba(255,255,255,.45);
-      border: 1px dashed rgba(0,0,0,.14);
-      color: rgba(24,11,10,.65);
+    .demoBox {
+      height: 80px;
+      border-radius: 12px;
+      background: #f7f7f7;
+      border: 1px dashed rgba(0, 0, 0, .12);
+      line-height: 80px;
+      text-align: center;
+      color: #aaa;
       font-size: 12px;
-      user-select:none;
+    }
+
+    .detailActions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .abnormalItem {
+      border: 1px solid rgba(0, 0, 0, .08);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, .70);
+      margin-top: 10px;
+    }
+
+    .largeItem {
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    #productList {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 6px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 10px;
+    }
+
+    #productListDetail {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 6px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 10px;
+    }
+
+    #productSentinelDetail {
+      flex: 0 0 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .45);
+      border: 1px dashed rgba(0, 0, 0, .14);
+      color: rgba(24, 11, 10, .65);
+      font-size: 12px;
+      user-select: none;
       min-height: 210px;
     }
 
-    #productSentinelX{
+    #productSentinelX {
       flex: 0 0 160px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:14px;
-      background: rgba(255,255,255,.45);
-      border: 1px dashed rgba(0,0,0,.14);
-      color: rgba(24,11,10,.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .45);
+      border: 1px dashed rgba(0, 0, 0, .14);
+      color: rgba(24, 11, 10, .65);
       font-size: 12px;
-      user-select:none;
+      user-select: none;
       min-height: 210px;
     }
 
     @keyframes cardFadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .fade-in{ animation: cardFadeIn .35s ease both; }
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
 
-    #productList::-webkit-scrollbar{ height: 10px; }
-    #productList::-webkit-scrollbar-thumb{ background: rgba(0,0,0,.12); border-radius: 999px; }
-    #productList::-webkit-scrollbar-track{ background: transparent; }
-    #productListDetail::-webkit-scrollbar{ height: 10px; }
-    #productListDetail::-webkit-scrollbar-thumb{ background: rgba(0,0,0,.12); border-radius: 999px; }
-    #productListDetail::-webkit-scrollbar-track{ background: transparent; }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: cardFadeIn .35s ease both;
+    }
+
+    #productList::-webkit-scrollbar {
+      height: 10px;
+    }
+
+    #productList::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, .12);
+      border-radius: 999px;
+    }
+
+    #productList::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #productListDetail::-webkit-scrollbar {
+      height: 10px;
+    }
+
+    #productListDetail::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, .12);
+      border-radius: 999px;
+    }
+
+    #productListDetail::-webkit-scrollbar-track {
+      background: transparent;
+    }
   </style>
 </head>
+
 <body>
   <div class="bg-glass"></div>
 
@@ -655,7 +843,7 @@
               <div class="item" id="aPhotoBlock" style="display:none;">
                 <div style="font-weight:900; margin-bottom:8px;">本次拍攝照片</div>
                 <img id="aUserPhoto" alt="user photo"
-                     style="width:100%; max-height:320px; object-fit:cover; border-radius:14px; border:1px solid rgba(0,0,0,.10);" />
+                  style="width:100%; max-height:320px; object-fit:cover; border-radius:14px; border:1px solid rgba(0,0,0,.10);" />
                 <div class="mutedText" style="margin-top:8px;">
                   來源：payload.photo 或 localStorage(user_photo)
                 </div>
@@ -852,7 +1040,7 @@
 
     document.getElementById("goResult").onclick = () => {
       const r = loadResult();
-      if(!r) return appToast("目前沒有結果，先去分析一次");
+      if (!r) return appToast("目前沒有結果，先去分析一次");
       location.hash = "#result";
     };
   </script>
@@ -888,14 +1076,14 @@
 
     document.getElementById("loginBtn").onclick = async () => {
       const r = await doLogin(u.value, p.value);
-      if(!r.ok) return appToast(r.message || "登入失敗");
+      if (!r.ok) return appToast(r.message || "登入失敗");
       appToast(r.mock ? "Mock 登入成功（目前無後端）" : "登入成功");
-      setTimeout(()=> location.hash = "#home", 450);
+      setTimeout(() => location.hash = "#home", 450);
     };
 
     document.getElementById("logoutBtn").onclick = () => logout();
 
-    if(isLoggedIn()) appToast("你目前已登入");
+    if (isLoggedIn()) appToast("你目前已登入");
   </script>
   <script type="module">
     import {
@@ -904,11 +1092,11 @@
     } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
 
     const toastEl = document.getElementById("toast");
-    function toast(msg){
-      if(!toastEl) return alert(msg);
+    function toast(msg) {
+      if (!toastEl) return alert(msg);
       toastEl.textContent = msg;
       toastEl.classList.add("show");
-      setTimeout(()=> toastEl.classList.remove("show"), 2200);
+      setTimeout(() => toastEl.classList.remove("show"), 2200);
     }
 
     const video = document.getElementById("video");
@@ -919,7 +1107,7 @@
     const meshCanvas = document.getElementById("meshCanvas");
     const hint = document.getElementById("hint");
 
-    const meshCtx = meshCanvas.getContext("2d", { alpha:true });
+    const meshCtx = meshCanvas.getContext("2d", { alpha: true });
     let surveyRaw = "{}";
 
     let stream = null;
@@ -933,16 +1121,16 @@
 
     const SKIP_UPLOAD = true;
 
-    function syncOverlaySize(){
+    function syncOverlaySize() {
       const rect = cameraBox.getBoundingClientRect();
-      meshCanvas.width  = Math.round(rect.width  * devicePixelRatio);
+      meshCanvas.width = Math.round(rect.width * devicePixelRatio);
       meshCanvas.height = Math.round(rect.height * devicePixelRatio);
-      meshCanvas.style.width  = rect.width + "px";
+      meshCanvas.style.width = rect.width + "px";
       meshCanvas.style.height = rect.height + "px";
       meshCtx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
     }
 
-    async function initModel(){
+    async function initModel() {
       const fileset = await FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
       );
@@ -960,7 +1148,7 @@
       });
     }
 
-    function packMetrics(result){
+    function packMetrics(result) {
       const blend = result.faceBlendshapes?.[0]?.categories ?? [];
       return {
         ts: Date.now(),
@@ -968,12 +1156,12 @@
       };
     }
 
-    function drawEffect(result){
+    function drawEffect(result) {
       const rect = cameraBox.getBoundingClientRect();
       meshCtx.clearRect(0, 0, rect.width, rect.height);
 
       const landmarks = result.faceLandmarks?.[0];
-      if(!landmarks || !video.videoWidth || !video.videoHeight) return;
+      if (!landmarks || !video.videoWidth || !video.videoHeight) return;
 
       const srcW = video.videoWidth;
       const srcH = video.videoHeight;
@@ -984,7 +1172,7 @@
       const offsetY = (dstH - srcH * scale) / 2;
 
       const points = new Array(landmarks.length);
-      for(let i = 0; i < landmarks.length; i++){
+      for (let i = 0; i < landmarks.length; i++) {
         const lm = landmarks[i];
         points[i] = {
           x: lm.x * srcW * scale + offsetX,
@@ -996,94 +1184,94 @@
       meshCtx.lineWidth = 1;
       meshCtx.strokeStyle = "rgba(255,255,255,.7)";
       meshCtx.beginPath();
-      for(const c of connections){
+      for (const c of connections) {
         const a = c[0] ?? c.start;
         const b = c[1] ?? c.end;
-        if(a == null || b == null) continue;
+        if (a == null || b == null) continue;
         const p1 = points[a];
         const p2 = points[b];
-        if(!p1 || !p2) continue;
+        if (!p1 || !p2) continue;
         meshCtx.moveTo(p1.x, p1.y);
         meshCtx.lineTo(p2.x, p2.y);
       }
       meshCtx.stroke();
     }
 
-    function loop(){
-      if(!running) return;
+    function loop() {
+      if (!running) return;
 
-      if(!video.videoWidth || !video.videoHeight){
+      if (!video.videoWidth || !video.videoHeight) {
         requestAnimationFrame(loop);
         return;
       }
 
-      try{
+      try {
         const now = performance.now();
         const result = faceLandmarker.detectForVideo(video, now);
         drawEffect(result);
         lastMetrics = packMetrics(result);
-      }catch(e){
+      } catch (e) {
         console.error("effect error:", e);
-        meshCtx.clearRect(0,0,meshCanvas.width,meshCanvas.height);
+        meshCtx.clearRect(0, 0, meshCanvas.width, meshCanvas.height);
       }
 
       requestAnimationFrame(loop);
     }
 
-    async function openCamera(){
-      if(!navigator.mediaDevices?.getUserMedia){
+    async function openCamera() {
+      if (!navigator.mediaDevices?.getUserMedia) {
         toast("此瀏覽器不支援相機");
         return;
       }
 
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode:"user", width:{ideal:1280}, height:{ideal:720} },
-        audio:false
+        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
       });
 
       video.srcObject = stream;
 
       await new Promise(resolve => {
-        if(video.readyState >= 2) return resolve();
+        if (video.readyState >= 2) return resolve();
         video.onloadedmetadata = () => resolve();
       });
 
-      const kick = async () => { try{ await video.play(); }catch(e){} };
+      const kick = async () => { try { await video.play(); } catch (e) { } };
       await kick();
-      window.addEventListener("pointerdown", kick, { once:true });
+      window.addEventListener("pointerdown", kick, { once: true });
 
       syncOverlaySize();
-      if(!overlayBound){
+      if (!overlayBound) {
         window.addEventListener("resize", syncOverlaySize);
         overlayBound = true;
       }
 
-      if(!faceLandmarker) await initModel();
+      if (!faceLandmarker) await initModel();
 
       running = true;
       hint.textContent = "相機已啟動，請對準框線後按下拍照";
       loop();
     }
 
-    function stopCamera(){
+    function stopCamera() {
       running = false;
       meshCtx.clearRect(0, 0, meshCanvas.width, meshCanvas.height);
 
-      if(stream){
-        stream.getTracks().forEach(t=>t.stop());
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
         stream = null;
       }
     }
 
-    function flashOnce(){
+    function flashOnce() {
       flash.style.opacity = 1;
-      setTimeout(()=> flash.style.opacity = 0, 120);
+      setTimeout(() => flash.style.opacity = 0, 120);
     }
 
-    async function getJpegBlob(){
+    async function getJpegBlob() {
       const w = video.videoWidth;
       const h = video.videoHeight;
-      if(!w || !h) throw new Error("Video not ready");
+      if (!w || !h) throw new Error("Video not ready");
 
       canvas.width = w;
       canvas.height = h;
@@ -1098,17 +1286,17 @@
       const blob = await new Promise(resolve => {
         canvas.toBlob(b => resolve(b), "image/jpeg", 0.95);
       });
-      if(!blob) throw new Error("toBlob failed");
+      if (!blob) throw new Error("toBlob failed");
       return blob;
     }
 
     captureBtn.addEventListener("click", async () => {
-      if(busy) return;
+      if (busy) return;
       busy = true;
       cameraBox.classList.add("loading");
 
-      try{
-        if(!stream) throw new Error("camera not started");
+      try {
+        if (!stream) throw new Error("camera not started");
 
         const blob = await getJpegBlob();
         flashOnce();
@@ -1116,7 +1304,7 @@
         const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
         localStorage.setItem("user_photo", dataUrl);
 
-        if(SKIP_UPLOAD){
+        if (SKIP_UPLOAD) {
           localStorage.removeItem("result");
           localStorage.setItem("force_demo", "1");
           stopCamera();
@@ -1128,19 +1316,19 @@
         const form = new FormData();
         form.append("photo", blob, "capture.jpg");
         form.append("survey", surveyRaw);
-        if(lastMetrics) form.append("metrics_json", JSON.stringify(lastMetrics));
+        if (lastMetrics) form.append("metrics_json", JSON.stringify(lastMetrics));
 
-        const res = await fetch("api/analyze.php", { method:"POST", body: form });
+        const res = await fetch("api/analyze.php", { method: "POST", body: form });
 
-        if(!res.ok){
+        if (!res.ok) {
           toast("後端分析失敗（請看 api/analyze.php）");
           return;
         }
 
         const ct = res.headers.get("content-type") || "";
-        if(!ct.includes("application/json")){
+        if (!ct.includes("application/json")) {
           const text = await res.text();
-          console.error("Non-JSON response:", text.slice(0,400));
+          console.error("Non-JSON response:", text.slice(0, 400));
           toast("後端回傳不是 JSON（請檢查 PHP 輸出）");
           return;
         }
@@ -1150,19 +1338,19 @@
 
         stopCamera();
         location.hash = "#result";
-      }catch(e){
+      } catch (e) {
         console.error(e);
         toast("拍照/上傳失敗（請允許相機權限）");
-      }finally{
+      } finally {
         cameraBox.classList.remove("loading");
         busy = false;
       }
     });
 
     window.startAnalyzePage = async () => {
-      if(analyzeActive) return;
+      if (analyzeActive) return;
       analyzeActive = true;
-      openCamera().catch(e=>{
+      openCamera().catch(e => {
         console.error(e);
         toast("無法開啟相機：請允許權限，並用 http/https 開啟頁面");
         hint.textContent = "相機啟動失敗：請允許權限/用 http 或 https 打開";
@@ -1178,24 +1366,24 @@
   </script>
   <script type="module">
     const toastEl = document.getElementById("toast");
-    function toast(msg){
-      if(!toastEl) return;
+    function toast(msg) {
+      if (!toastEl) return;
       toastEl.textContent = msg;
       toastEl.classList.add("show");
-      setTimeout(()=> toastEl.classList.remove("show"), 1800);
+      setTimeout(() => toastEl.classList.remove("show"), 1800);
     }
 
-    function loadResult(){
+    function loadResult() {
       const keys = ["result", "ai_result", "analysis_result", "payload"];
-      for(const k of keys){
+      for (const k of keys) {
         const raw = localStorage.getItem(k);
-        if(!raw) continue;
-        try { return JSON.parse(raw); } catch(e){}
+        if (!raw) continue;
+        try { return JSON.parse(raw); } catch (e) { }
       }
       return null;
     }
 
-    function getDemoPayload(){
+    function getDemoPayload() {
       return {
         timestamp: new Date().toISOString(),
         overall: 78,
@@ -1221,10 +1409,10 @@
       url.searchParams.get("demo") === "1" ||
       localStorage.getItem("force_demo") === "1" ||
       location.hash.includes("demo=1");
-    if(forceDemo) localStorage.removeItem("force_demo");
+    if (forceDemo) localStorage.removeItem("force_demo");
 
     let payload = forceDemo ? null : loadResult();
-    if(!payload){
+    if (!payload) {
       payload = getDemoPayload();
       toast("已載入測試數值（demo）");
     }
@@ -1236,11 +1424,11 @@
     };
 
     const metrics = {
-      glow:       toNum(m.glow ?? m.光澤, 72),
+      glow: toNum(m.glow ?? m.光澤, 72),
       complexion: toNum(m.complexion ?? m.氣色, 78),
-      blemish:    toNum(m.blemish ?? m.瑕疵, 64),
+      blemish: toNum(m.blemish ?? m.瑕疵, 64),
       oilBalance: toNum(m.oilBalance ?? m.油水平衡, 70),
-      evenness:   toNum(m.evenness ?? m.均勻度, 75),
+      evenness: toNum(m.evenness ?? m.均勻度, 75),
     };
 
     const overall = toNum(payload.overall, Math.round(
@@ -1249,32 +1437,32 @@
 
     const quality =
       overall >= 85 ? "狀態極佳" :
-      overall >= 75 ? "整體良好" :
-      overall >= 60 ? "可再提升" : "需要加強";
+        overall >= 75 ? "整體良好" :
+          overall >= 60 ? "可再提升" : "需要加強";
 
-    function toScore10(score100){
+    function toScore10(score100) {
       const n = Number(score100);
-      if(!Number.isFinite(n)) return 0;
+      if (!Number.isFinite(n)) return 0;
       return Math.round((n / 10) * 10) / 10;
     }
 
-    function setStepAFromMetrics(){
+    function setStepAFromMetrics() {
       const score10 = toScore10(metrics.complexion);
 
       const aScore = document.getElementById("aScore");
       const aStatusText = document.getElementById("aStatusText");
       const aHintText = document.getElementById("aHintText");
 
-      if(aScore) aScore.textContent = score10.toFixed(1);
+      if (aScore) aScore.textContent = score10.toFixed(1);
 
       let status = "狀態不錯";
-      if(score10 >= 8.5) status = "今天狀態極佳";
-      else if(score10 >= 7.0) status = "今天狀態良好";
-      else if(score10 >= 6.0) status = "今天略疲憊";
+      if (score10 >= 8.5) status = "今天狀態極佳";
+      else if (score10 >= 7.0) status = "今天狀態良好";
+      else if (score10 >= 6.0) status = "今天略疲憊";
       else status = "今天狀態不佳";
-      if(aStatusText) aStatusText.textContent = status;
+      if (aStatusText) aStatusText.textContent = status;
 
-      if(aHintText){
+      if (aHintText) {
         aHintText.textContent =
           score10 < 6.0
             ? "好消息：氣色可在 5 分鐘內改善！"
@@ -1282,10 +1470,10 @@
       }
     }
 
-    function loadUserPhoto(){
+    function loadUserPhoto() {
       const img = document.getElementById("aUserPhoto");
       const block = document.getElementById("aPhotoBlock");
-      if(!img || !block) return;
+      if (!img || !block) return;
 
       const fromPayload = payload.photo || payload.image || payload.photoDataUrl;
       const fromLS =
@@ -1295,10 +1483,10 @@
 
       const src = fromPayload || fromLS;
 
-      if(src){
+      if (src) {
         img.src = src;
         block.style.display = "block";
-      }else{
+      } else {
         block.style.display = "none";
       }
     }
@@ -1316,39 +1504,39 @@
     setStepAFromMetrics();
     loadUserPhoto();
 
-    function drawRadar(canvas, values, labels){
-      if(!canvas) return;
+    function drawRadar(canvas, values, labels) {
+      if (!canvas) return;
       const ctx = canvas.getContext("2d");
       const W = canvas.width, H = canvas.height;
-      ctx.clearRect(0,0,W,H);
+      ctx.clearRect(0, 0, W, H);
 
-      const cx = W/2, cy = H/2;
+      const cx = W / 2, cy = H / 2;
       const radius = Math.min(W, H) * 0.34;
       const N = labels.length;
 
       ctx.lineWidth = 1;
-      for(let k=1;k<=8;k++){
-        const r = radius * (k/8);
+      for (let k = 1; k <= 8; k++) {
+        const r = radius * (k / 8);
         ctx.beginPath();
-        for(let i=0;i<N;i++){
-          const a = (-Math.PI/2) + (i * 2*Math.PI / N);
+        for (let i = 0; i < N; i++) {
+          const a = (-Math.PI / 2) + (i * 2 * Math.PI / N);
           const x = cx + r * Math.cos(a);
           const y = cy + r * Math.sin(a);
-          if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
         ctx.closePath();
         ctx.strokeStyle = "rgba(0,0,0,.10)";
         ctx.stroke();
       }
 
-      for(let i=0;i<N;i++){
-        const a = (-Math.PI/2) + (i * 2*Math.PI / N);
+      for (let i = 0; i < N; i++) {
+        const a = (-Math.PI / 2) + (i * 2 * Math.PI / N);
         const x = cx + radius * Math.cos(a);
         const y = cy + radius * Math.sin(a);
 
         ctx.beginPath();
-        ctx.moveTo(cx,cy);
-        ctx.lineTo(x,y);
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(x, y);
         ctx.strokeStyle = "rgba(0,0,0,.12)";
         ctx.stroke();
 
@@ -1361,14 +1549,14 @@
         ctx.fillText(labels[i], lx, ly);
       }
 
-      const vals = values.map(v=> Math.max(0, Math.min(100, Number(v))) / 100);
+      const vals = values.map(v => Math.max(0, Math.min(100, Number(v))) / 100);
       ctx.beginPath();
-      for(let i=0;i<N;i++){
-        const a = (-Math.PI/2) + (i * 2*Math.PI / N);
+      for (let i = 0; i < N; i++) {
+        const a = (-Math.PI / 2) + (i * 2 * Math.PI / N);
         const r = radius * vals[i];
         const x = cx + r * Math.cos(a);
         const y = cy + r * Math.sin(a);
-        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       }
       ctx.closePath();
 
@@ -1378,13 +1566,13 @@
       ctx.fill();
       ctx.stroke();
 
-      for(let i=0;i<N;i++){
-        const a = (-Math.PI/2) + (i * 2*Math.PI / N);
+      for (let i = 0; i < N; i++) {
+        const a = (-Math.PI / 2) + (i * 2 * Math.PI / N);
         const r = radius * vals[i];
         const x = cx + r * Math.cos(a);
         const y = cy + r * Math.sin(a);
         ctx.beginPath();
-        ctx.arc(x,y,6,0,Math.PI*2);
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(216,189,91,.95)";
         ctx.fill();
         ctx.strokeStyle = "rgba(255,255,255,.9)";
@@ -1394,7 +1582,7 @@
     }
 
     const radarValues = [metrics.glow, metrics.complexion, metrics.blemish, metrics.oilBalance, metrics.evenness];
-    const radarLabels = ["光澤","氣色","瑕疵","油水平衡","均勻度"];
+    const radarLabels = ["光澤", "氣色", "瑕疵", "油水平衡", "均勻度"];
 
     const radar = document.getElementById("radar");
     if (radar) drawRadar(radar, radarValues, radarLabels);
@@ -1418,7 +1606,7 @@
     ];
 
     bars.innerHTML = "";
-    for(const [label, val] of barDefs){
+    for (const [label, val] of barDefs) {
       const v = Math.max(0, Math.min(100, Number(val)));
       const row = document.createElement("div");
       row.className = "barRow";
@@ -1432,7 +1620,7 @@
 
     const summaryCards = document.getElementById("summaryCards");
 
-    function addCard(title, val, hint){
+    function addCard(title, val, hint) {
       const div = document.createElement("div");
       div.className = "item";
       div.innerHTML = `
@@ -1447,29 +1635,29 @@
 
     summaryCards.innerHTML = "";
     addCard("氣色", metrics.complexion, "偏低常見原因：睡眠不足、背光、妝容/濾鏡干擾。");
-    addCard("膚況", Math.round((metrics.blemish + metrics.evenness)/2), "瑕疵＋均勻度一起看，代表整體膚況穩定性。");
+    addCard("膚況", Math.round((metrics.blemish + metrics.evenness) / 2), "瑕疵＋均勻度一起看，代表整體膚況穩定性。");
     addCard("光澤", metrics.glow, "光澤與光線很相關：自然光、避免直射反光更準。");
     addCard("油水平衡", metrics.oilBalance, "太油或太乾都會影響均勻度與瑕疵，建議觀察 T 字/兩頰差異。");
 
     const riskList = document.getElementById("riskList");
     const risks = [];
-    if(metrics.complexion < 60) risks.push("氣色偏低：先確認光線 + 睡眠狀態（此為參考，不代表健康診斷）。");
-    if(metrics.blemish < 55) risks.push("瑕疵指標偏低：建議先從清潔、保濕與防曬一致性開始。");
-    if(metrics.oilBalance < 55) risks.push("油水平衡偏低：可能過乾/過油，建議簡化保養並觀察 3–7 天。");
-    if(risks.length === 0) risks.push("沒有明顯風險指標，維持目前作息與防曬習慣即可。");
+    if (metrics.complexion < 60) risks.push("氣色偏低：先確認光線 + 睡眠狀態（此為參考，不代表健康診斷）。");
+    if (metrics.blemish < 55) risks.push("瑕疵指標偏低：建議先從清潔、保濕與防曬一致性開始。");
+    if (metrics.oilBalance < 55) risks.push("油水平衡偏低：可能過乾/過油，建議簡化保養並觀察 3–7 天。");
+    if (risks.length === 0) risks.push("沒有明顯風險指標，維持目前作息與防曬習慣即可。");
 
     riskList.innerHTML = "";
-    risks.forEach(t=>{
+    risks.forEach(t => {
       const div = document.createElement("div");
       div.className = "item";
       div.textContent = t;
       riskList.appendChild(div);
     });
 
-    window.switchStep = function switchStep(outId, inId){
+    window.switchStep = function switchStep(outId, inId) {
       const outE = document.getElementById(outId);
       const inE = document.getElementById(inId);
-      if(!outE || !inE) return;
+      if (!outE || !inE) return;
 
       outE.classList.remove("visible");
       setTimeout(() => {
@@ -1480,9 +1668,9 @@
 
     const tipsList = document.getElementById("tipsList");
 
-    function uniqPush(arr, txt){
-      if(!txt) return;
-      if(!arr.includes(txt)) arr.push(txt);
+    function uniqPush(arr, txt) {
+      if (!txt) return;
+      if (!arr.includes(txt)) arr.push(txt);
     }
 
     const tipsBase = Array.isArray(payload.tips) && payload.tips.length
@@ -1491,23 +1679,23 @@
 
     const tips = tipsBase.slice();
 
-    if(metrics.complexion < 60){
+    if (metrics.complexion < 60) {
       uniqPush(tips, "氣色偏低：自然光側光重拍，並把睡眠拉回（提早 30–60 分鐘上床最有效）。");
       uniqPush(tips, "早餐補水＋蛋白質（豆漿/蛋/優格）能讓氣色更穩。");
     }
-    if(metrics.blemish < 55){
+    if (metrics.blemish < 55) {
       uniqPush(tips, "瑕疵偏低：清潔改溫和，洗面 40–60 秒，避免用力摩擦。");
       uniqPush(tips, "粉刺/痘痘多：先穩定保濕＋防曬，再逐步加入功能型產品。");
     }
-    if(metrics.oilBalance < 55){
+    if (metrics.oilBalance < 55) {
       uniqPush(tips, "油水平衡偏低：先簡化保養 3–7 天觀察（越簡單越穩）。");
       uniqPush(tips, "白天用吸油面紙輕壓即可，別過度控油。");
     }
-    if(metrics.glow < 60){
+    if (metrics.glow < 60) {
       uniqPush(tips, "光澤偏低：避免背光與頂光，用窗邊自然側光，距離 30–40cm。");
       uniqPush(tips, "保養先把保濕層做好（化妝水/精華）再加鎖水乳。");
     }
-    if(metrics.evenness < 60){
+    if (metrics.evenness < 60) {
       uniqPush(tips, "均勻度偏低：防曬要穩定，並減少摩擦（洗臉/擦拭要溫柔）。");
       uniqPush(tips, "固定同一時間連拍 3 天再看趨勢，單次波動很常見。");
     }
@@ -1519,19 +1707,19 @@
       "室內偏黃光會拉低氣色與均勻度，盡量靠窗自然光。",
       "今天狀態差別急著下結論：用 7 天平均值更準。"
     ];
-    for(const t of tipFallback){
-      if(tips.length >= 6) break;
+    for (const t of tipFallback) {
+      if (tips.length >= 6) break;
       uniqPush(tips, t);
     }
 
     document.getElementById("tipsCount").textContent = `${tips.length} 條`;
 
-    function renderTips(container, list){
+    function renderTips(container, list) {
       container.innerHTML = "";
-      list.forEach((t, idx)=>{
+      list.forEach((t, idx) => {
         const div = document.createElement("div");
         div.className = "item";
-        div.innerHTML = `<span class="badge">#${idx+1}</span> ${t}`;
+        div.innerHTML = `<span class="badge">#${idx + 1}</span> ${t}`;
         container.appendChild(div);
       });
     }
@@ -1540,8 +1728,8 @@
     const productList = document.getElementById("productList");
     const productListDetail = document.getElementById("productListDetail");
 
-    function buildFakeProducts(total = 100){
-      const tags = ["保濕","打底","光澤","均勻度","油水平衡","瑕疵改善","修護","防曬","舒緩","急救"];
+    function buildFakeProducts(total = 100) {
+      const tags = ["保濕", "打底", "光澤", "均勻度", "油水平衡", "瑕疵改善", "修護", "防曬", "舒緩", "急救"];
       const descs = [
         "適合日常維穩，先把底盤顧好。",
         "針對弱項加強，建議連續使用 7 天觀察趨勢。",
@@ -1577,7 +1765,7 @@
     const PAGE_SIZE_DETAIL = 8;
     let loadingDetail = false;
 
-    function createProductCard(p){
+    function createProductCard(p) {
       const div = document.createElement("div");
       div.className = "item productCard fade-in";
       div.dataset.kind = "product";
@@ -1596,26 +1784,26 @@
       return div;
     }
 
-    function updateProductCount(){
+    function updateProductCount() {
       const cards = productList.querySelectorAll('[data-kind="product"]');
       document.getElementById("productCount").textContent = `${cards.length} 項`;
     }
-    function updateProductCount2(){
-      if(!productListDetail) return;
+    function updateProductCount2() {
+      if (!productListDetail) return;
       const cards = productListDetail.querySelectorAll('[data-kind="product"]');
       const productCount2 = document.getElementById("productCount2");
       if (productCount2) productCount2.textContent = `${cards.length} 項`;
     }
 
-    function loadMoreX(){
-      if(loading) return;
+    function loadMoreX() {
+      if (loading) return;
       loading = true;
 
       const start = page * PAGE_SIZE;
       const end = start + PAGE_SIZE;
       const slice = ALL_PRODUCTS.slice(start, end);
 
-      if(slice.length === 0){
+      if (slice.length === 0) {
         sentinelXText.textContent = "已經到底了";
         loading = false;
         return;
@@ -1631,15 +1819,15 @@
       loading = false;
     }
 
-    function loadMoreDetail(){
-      if(!productListDetail || loadingDetail) return;
+    function loadMoreDetail() {
+      if (!productListDetail || loadingDetail) return;
       loadingDetail = true;
 
       const start = pageDetail * PAGE_SIZE_DETAIL;
       const end = start + PAGE_SIZE_DETAIL;
       const slice = ALL_PRODUCTS.slice(start, end);
 
-      if(slice.length === 0){
+      if (slice.length === 0) {
         sentinelDetailText.textContent = "已經到底了";
         loadingDetail = false;
         return;
@@ -1681,7 +1869,7 @@
 
     const ioX = new IntersectionObserver((entries) => {
       const e = entries[0];
-      if(e.isIntersecting){
+      if (e.isIntersecting) {
         loadMoreX();
       }
     }, {
@@ -1695,7 +1883,7 @@
     if (productListDetail) {
       const ioDetail = new IntersectionObserver((entries) => {
         const e = entries[0];
-        if(e.isIntersecting){
+        if (e.isIntersecting) {
           loadMoreDetail();
         }
       }, {
@@ -1711,25 +1899,25 @@
   <script type="module">
     const pages = Array.from(document.querySelectorAll(".page"));
 
-    function setActive(page){
+    function setActive(page) {
       pages.forEach(p => {
         p.classList.toggle("active", p.dataset.page === page);
       });
     }
 
-    function getPageFromHash(){
+    function getPageFromHash() {
       const raw = location.hash.replace("#", "").trim();
-      if(!raw) return "home";
+      if (!raw) return "home";
       return raw.split("?")[0].split("&")[0];
     }
 
-    function route(){
+    function route() {
       const page = getPageFromHash();
       setActive(page);
 
-      if(page === "analyze" && window.startAnalyzePage) {
+      if (page === "analyze" && window.startAnalyzePage) {
         window.startAnalyzePage();
-      }else if(window.stopAnalyzePage){
+      } else if (window.stopAnalyzePage) {
         window.stopAnalyzePage();
       }
     }
@@ -1739,8 +1927,9 @@
     };
 
     window.addEventListener("hashchange", route);
-    if(!location.hash) location.hash = "#home";
+    if (!location.hash) location.hash = "#home";
     route();
   </script>
 </body>
+
 </html>
