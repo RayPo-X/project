@@ -1,3 +1,3 @@
 # project
 美肌專案
-網站:https://raypo-x.github.io/project/#home
+網站:https://raypo-x.github.io/project/
