@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>AI 氣色 × 膚況顧問</title>
-  <link rel="stylesheet" href="assets/app.css" />
+  <!-- <link rel="stylesheet" href="assets/app.css" /> -->
 
   <!-- 引入 Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,7 +108,7 @@
     /* Standard Card adjustments */
     .card {
       width: 100%;
-      max-width: 380px;
+      max-width: 420px;
       /* Default max-width adjusted */
       position: relative;
       transition: all var(--transition-speed);
@@ -624,6 +624,31 @@
       }
     }
 
+    /* 當對準成功時，導引框變成綠色實線 */
+    #faceGuide.valid {
+      border-color: #00ff00;
+      border-style: solid;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+      animation: none;
+      /* 停止呼吸燈動畫，表示鎖定 */
+      transform: scale(1.05);
+      transition: all 0.3s;
+    }
+
+    /* 拍照按鈕在沒對準時半透明，對準後全亮 */
+    #captureBtn {
+      opacity: 0.5;
+      pointer-events: none;
+      /* 沒對準不給按 */
+      transition: opacity 0.3s;
+    }
+
+    #captureBtn.ready {
+      opacity: 1;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
     /* ===== Result styles ===== */
     html,
     body {
@@ -631,7 +656,7 @@
       overflow: auto;
     }
 
-    .stage {
+    .page[data-page="result"] .stage {
       align-items: flex-start;
     }
 
@@ -1099,54 +1124,110 @@
 
         <div class="body">
           <form id="surveyForm">
+            <!-- 1. 年齡 -->
             <div class="q">
-              <label>1) 你的膚質偏向？</label>
+              <label>1) 您的年齡區間？</label>
               <div class="opts">
-                <label class="opt"><input type="radio" name="skinType" value="dry" required>乾性</label>
-                <label class="opt"><input type="radio" name="skinType" value="oily" required>油性</label>
-                <label class="opt"><input type="radio" name="skinType" value="combo" required>混合</label>
-                <label class="opt"><input type="radio" name="skinType" value="normal" required>中性</label>
+                <label class="opt"><input type="radio" name="age" value="u20" required>20歲以下</label>
+                <label class="opt"><input type="radio" name="age" value="20-30" required>20-30歲</label>
+                <label class="opt"><input type="radio" name="age" value="30-40" required>30-40歲</label>
+                <label class="opt"><input type="radio" name="age" value="40up" required>40歲以上</label>
               </div>
             </div>
 
+            <!-- 2. 膚況 -->
             <div class="q">
-              <label>2) 今天睡眠狀態？</label>
+              <label>2) 清潔肌膚後30分鐘，膚況是？</label>
               <div class="opts">
-                <label class="opt"><input type="radio" name="sleep" value="good" required>充足</label>
-                <label class="opt"><input type="radio" name="sleep" value="ok" required>普通</label>
-                <label class="opt"><input type="radio" name="sleep" value="bad" required>不足</label>
+                <label class="opt"><input type="radio" name="skinType" value="dry" required>乾性肌膚(全臉乾燥緊繃脫皮)</label>
+                <label class="opt"><input type="radio" name="skinType" value="oily" required>油性肌膚(全臉出油泛油光)</label>
+                <label class="opt"><input type="radio" name="skinType" value="combo" required>混合性肌膚(T字出油兩頰乾)</label>
+                <label class="opt"><input type="radio" name="skinType" value="normal" required>中性肌膚(全臉舒適)</label>
               </div>
             </div>
-
-            <div class="q">
-              <label>3) 主要關心項目（可複選）</label>
-              <div class="opts">
-                <label class="opt"><input type="checkbox" name="concerns" value="acne">痘痘/粉刺</label>
-                <label class="opt"><input type="checkbox" name="concerns" value="pores">毛孔</label>
-                <label class="opt"><input type="checkbox" name="concerns" value="dull">暗沉</label>
-                <label class="opt"><input type="checkbox" name="concerns" value="spots">斑點</label>
-                <label class="opt"><input type="checkbox" name="concerns" value="oil">出油</label>
-                <label class="opt"><input type="checkbox" name="concerns" value="dry">乾燥</label>
-              </div>
-            </div>
-
-            <div class="q">
-              <label>4) 是否有上妝/濾鏡？</label>
-              <div class="opts">
-                <label class="opt"><input type="radio" name="makeup" value="no" required>沒有</label>
-                <label class="opt"><input type="radio" name="makeup" value="light" required>淡妝</label>
-                <label class="opt"><input type="radio" name="makeup" value="heavy" required>濃妝/濾鏡</label>
-              </div>
-            </div>
-
-            <div class="actions">
-              <button type="button" class="btn" onclick="go('home')">取消</button>
-              <button type="button" class="btn" onclick="go('analyze')">跳過</button>
-              <button type="submit" class="btn btn-primary">下一步：拍照</button>
-            </div>
-          </form>
         </div>
+
+        <!-- 3. 敏感度 -->
+        <div class="q">
+          <label>3) 您對外界刺激或新產品的敏感程度？</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="sensitivity" value="high" required>容易泛紅敏感</label>
+            <label class="opt"><input type="radio" name="sensitivity" value="med" required>偶爾會但可接受</label>
+            <label class="opt"><input type="radio" name="sensitivity" value="none" required>幾乎沒有問題</label>
+          </div>
+        </div>
+
+        <!-- 4. 保養節奏 -->
+        <div class="q">
+          <label>4) 您更偏好哪種保養節奏？</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="routine" value="full" required>早晚完整一套</label>
+            <label class="opt"><input type="radio" name="routine" value="simple" required>僅早或晚單一步驟</label>
+            <label class="opt"><input type="radio" name="routine" value="random" required>隨性不固定</label>
+          </div>
+        </div>
+
+        <!-- 5. 睡眠時數 -->
+        <div class="q">
+          <label>5) 最近一週的平均睡眠時數？</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="sleep" value="u6" required>少於6小時</label>
+            <label class="opt"><input type="radio" name="sleep" value="6-7" required>6-7小時</label>
+            <label class="opt"><input type="radio" name="sleep" value="7-8" required>7-8小時</label>
+            <label class="opt"><input type="radio" name="sleep" value="8up" required>超過8小時</label>
+          </div>
+        </div>
+
+        <!-- 6. 壓力 -->
+        <div class="q">
+          <label>6) 最近覺得壓力大嗎？</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="stress" value="none" required>幾乎沒有</label>
+            <label class="opt"><input type="radio" name="stress" value="some" required>偶爾覺得有</label>
+            <label class="opt"><input type="radio" name="stress" value="high" required>經常覺得壓力大</label>
+          </div>
+        </div>
+
+        <!-- 7. 運動 -->
+        <div class="q">
+          <label>7) 一週大約幾天有運動超過30分鐘？</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="exercise" value="0" required>0天</label>
+            <label class="opt"><input type="radio" name="exercise" value="1-2" required>1-2天</label>
+            <label class="opt"><input type="radio" name="exercise" value="3-4" required>3-4天</label>
+            <label class="opt"><input type="radio" name="exercise" value="5-7" required>5-7天</label>
+          </div>
+        </div>
+
+        <!-- 8. 油炸頻率 (選填) -->
+        <div class="q">
+          <label>8) 一週油炸重油食物的頻率？（選填）</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="foodOil" value="0-1">0-1次</label>
+            <label class="opt"><input type="radio" name="foodOil" value="2-3">2-3次</label>
+            <label class="opt"><input type="radio" name="foodOil" value="4-5">4-5次</label>
+            <label class="opt"><input type="radio" name="foodOil" value="6up">6次以上</label>
+          </div>
+        </div>
+
+        <!-- 9. 蔬果攝取 (選填) -->
+        <div class="q">
+          <label>9) 您每天蔬果攝取量？（選填）</label>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="foodVeg" value="high">很多均衡</label>
+            <label class="opt"><input type="radio" name="foodVeg" value="normal">一般少量</label>
+            <label class="opt"><input type="radio" name="foodVeg" value="low">很少幾乎沒有</label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn" onclick="go('home')">取消</button>
+          <button type="button" class="btn" onclick="go('analyze')">跳過</button>
+          <button type="submit" class="btn btn-primary">下一步：拍照</button>
+        </div>
+        </form>
       </div>
+    </div>
     </div>
   </section>
 
@@ -1487,63 +1568,585 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- Inlined app.css -->
+  <style>
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+      --glass-bg: rgba(255, 255, 255, .14);
+      --glass-border: rgba(255, 255, 255, .22);
+
+      --text-dark: rgba(22, 22, 26, .92);
+      --text: rgba(22, 22, 26, .92);
+      --muted: rgba(22, 22, 26, .62);
+
+      --shadow: rgba(0, 0, 0, .18);
+
+      --accent: #ff9db8;
+      /* 粉 */
+      --accent2: #f2d88c;
+      /* 香檳金 */
+
+      --page-max: 1040px;
+      --header-h: 76px;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+
+      overflow-x: hidden;
+      overflow-y: auto;
+
+      background:
+        radial-gradient(1200px 900px at 20% 18%, rgba(255, 182, 193, 0.35), transparent 55%),
+        radial-gradient(900px 700px at 80% 28%, rgba(242, 216, 140, 0.30), transparent 55%),
+        radial-gradient(900px 900px at 50% 90%, rgba(255, 255, 255, 0.85), transparent 60%),
+        linear-gradient(180deg, #ffffff 0%, #f5f6fb 100%);
+    }
+
+    .bg-glass {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .bg-glass::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("assets/background.jpg") center / cover no-repeat;
+      filter: blur(1px) saturate(1.05);
+      opacity: 0.45;
+    }
+
+    .bg-glass::after {
+      content: "";
+      position: absolute;
+      inset: -40px;
+      backdrop-filter: blur(22px) saturate(1.2);
+      -webkit-backdrop-filter: blur(22px) saturate(1.2);
+      background:
+        linear-gradient(180deg,
+          rgba(255, 255, 255, .35),
+          rgba(255, 255, 255, .15));
+      background-image:
+        radial-gradient(rgba(0, 0, 0, .08) 1px, transparent 1px);
+      background-size: 24px 24px;
+      opacity: 1;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(var(--page-max), calc(100% - 32px));
+      padding: calc(14px + var(--safe-top)) 18px 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, .35);
+      border: 1px solid rgba(0, 0, 0, .06);
+      border-radius: 18px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .10);
+    }
+
+    .brand {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255, 157, 184, .95), rgba(242, 216, 140, .92));
+      box-shadow: 0 10px 30px var(--shadow);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: 1px;
+      font-weight: 800;
+      background: linear-gradient(135deg, rgba(255, 157, 184, .95), rgba(242, 216, 140, .95));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .brand p {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .4px;
+    }
+
+    .stage {
+      position: relative;
+      z-index: 1;
+      padding:
+        calc(var(--header-h) + var(--safe-top) + 18px) 16px calc(24px + var(--safe-bottom)) 16px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .card {
+      width: min(980px, 100%);
+      max-width: var(--page-max);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 22px;
+      box-shadow: 0 20px 70px rgba(0, 0, 0, .18);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 16px 16px 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 1px;
+      font-weight: 900;
+      color: var(--text-dark);
+    }
+
+    .sub {
+      margin: 6px 0 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .4px;
+    }
+
+    .body {
+      padding: 0 16px 16px 16px;
+    }
+
+    .btn {
+      border: 1px solid rgba(0, 0, 0, .10);
+      background: rgba(255, 255, 255, .60);
+      color: rgba(22, 22, 26, .88);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 13px;
+      letter-spacing: .4px;
+      cursor: pointer;
+      transition: transform .15s ease, filter .15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      filter: brightness(1.03);
+    }
+
+    .btn:active {
+      transform: scale(.98);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(255, 157, 184, .95), rgba(242, 216, 140, .92));
+      border: 1px solid rgba(0, 0, 0, .08);
+      color: rgba(24, 11, 10, 0.92);
+      font-weight: 900;
+    }
+
+    .btn-lg {
+      padding: 14px 90px;
+      font-size: 24px;
+      border-radius: 200px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+
+    .kpi {
+      flex: 1 1 220px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .55);
+      border: 1px solid rgba(0, 0, 0, .08);
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+    }
+
+    .big {
+      font-size: 34px;
+      font-weight: 950;
+      line-height: 1;
+      background: linear-gradient(135deg, rgba(242, 216, 140, .95), rgba(255, 157, 184, .85));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .62);
+      border: 1px solid rgba(0, 0, 0, .10);
+      color: rgba(22, 22, 26, .90);
+      outline: none;
+    }
+
+    .input::placeholder {
+      color: rgba(22, 22, 26, .42);
+    }
+
+    /* .toast style is already in older CSS but overwritten here for completeness */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(16px + var(--safe-bottom));
+      transform: translateX(-50%);
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, .78);
+      border: 1px solid rgba(255, 255, 255, .18);
+      color: rgba(255, 255, 255, .92);
+      font-size: 13px;
+      letter-spacing: .3px;
+      box-shadow: 0 16px 50px rgba(0, 0, 0, .35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+      z-index: 60;
+      max-width: min(92vw, 540px);
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    @media (max-width: 720px) {
+      header {
+        width: calc(100% - 24px);
+        padding: calc(12px + var(--safe-top)) 14px 10px 14px;
+        border-radius: 16px;
+      }
+
+      .stage {
+        padding-top: calc(var(--header-h) + var(--safe-top) + 12px);
+      }
+
+      .btn-lg {
+        padding: 14px 48px;
+        font-size: 20px;
+      }
+    }
+  </style>
+
   <script>
     window.APP_SINGLE = true;
-  </script>
-  <script type="module">
-    import { loadResult, toast as appToast } from "./assets/app.js";
 
+    // --- Inlined app.js ---
+    const AUTH_KEY = "skinapp_auth";
+    const RESULT_KEY = "skinapp_result";
+    const DEV_FORCE_MOCK = true; // Forced to true for local generic execution
+
+    function toast(msg) {
+      const el = document.getElementById("toast");
+      if (!el) return alert(msg);
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 2400);
+    }
+
+    async function safeText(res) {
+      try { return await res.text(); } catch { return ""; }
+    }
+
+    async function safeJsonFetch(url, options = {}, fallback = null) {
+      try {
+        const res = await fetch(url, { cache: "no-store", ...options });
+        const text = await safeText(res);
+        if (text.trim().startsWith("<")) {
+          return { ok: false, status: res.status, isHtml: true, data: fallback, raw: text };
+        }
+        const data = text ? JSON.parse(text) : fallback;
+        return { ok: res.ok, status: res.status, data, raw: text };
+      } catch (err) {
+        return { ok: false, status: 0, error: err, data: fallback, raw: "" };
+      }
+    }
+
+    async function backendAvailable() {
+      if (DEV_FORCE_MOCK) return false;
+      const r = await safeJsonFetch("./api/me.php", {}, null);
+      if (r.ok && r.data && typeof r.data === "object") return true;
+      if (r.isHtml) return false;
+      return false;
+    }
+
+    function isLoggedIn() {
+      return localStorage.getItem(AUTH_KEY) === "1";
+    }
+    function setLoggedIn(v) {
+      localStorage.setItem(AUTH_KEY, v ? "1" : "0");
+    }
+
+    async function requireLogin({ silent = false } = {}) {
+      if (isLoggedIn()) return true;
+      if (await backendAvailable()) {
+        const me = await safeJsonFetch("./api/me.php", {}, { ok: false });
+        if (me.ok && me.data?.ok) {
+          setLoggedIn(true);
+          return true;
+        }
+      }
+      if (!silent) {
+        if (window.APP_SINGLE) {
+          location.hash = "#login";
+        } else {
+          location.href = "login.html";
+        }
+      }
+      return false;
+    }
+
+    async function doLogin(username, password) {
+      if (await backendAvailable()) {
+        const body = new FormData();
+        body.append("username", username);
+        body.append("password", password);
+        const r = await safeJsonFetch("./api/login.php", { method: "POST", body }, { ok: false });
+        if (r.ok && r.data?.ok) {
+          setLoggedIn(true);
+          return { ok: true };
+        }
+        return { ok: false, message: r.data?.message || "登入失敗" };
+      }
+      if (username.trim() && password.trim()) {
+        setLoggedIn(true);
+        return { ok: true, mock: true };
+      }
+      return { ok: false, message: "請輸入帳號密碼" };
+    }
+
+    function logout() {
+      setLoggedIn(false);
+      localStorage.removeItem(RESULT_KEY);
+      if (window.APP_SINGLE) {
+        location.hash = "#home";
+      } else {
+        location.href = "index.html";
+      }
+    }
+
+    function saveResult(payload) {
+      localStorage.setItem(RESULT_KEY, JSON.stringify(payload));
+    }
+    function loadResult() {
+      try {
+        const raw = localStorage.getItem(RESULT_KEY) || localStorage.getItem("result");
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function mockAnalyzePayload() {
+      return {
+        ok: true,
+        overall: 82,
+        photo_url: null,
+        metrics: {
+          glow: 76,
+          oil: 42,
+          redness: 28,
+          pores: 55,
+          spots: 36,
+          wrinkles: 61
+        },
+        tips: [
+          "保濕：晚間加強保濕精華，白天使用含玻尿酸乳液。",
+          "泛紅：避免過熱水洗臉，降低刺激性保養。",
+          "毛孔：每週 1–2 次溫和去角質，注意防曬。"
+        ]
+      };
+    }
+
+    async function analyzePhoto(blob) {
+      if (await backendAvailable()) {
+        const form = new FormData();
+        form.append("photo", blob, "capture.jpg");
+        const res = await fetch("./api/analyze.php", { method: "POST", body: form });
+        const text = await safeText(res);
+        if (text.trim().startsWith("<")) {
+          return { ok: false, message: "後端回傳非 JSON" };
+        }
+        const data = text ? JSON.parse(text) : null;
+        return data || { ok: false, message: "後端無資料" };
+      }
+      await new Promise(r => setTimeout(r, 650));
+      return mockAnalyzePayload();
+    }
+
+    function drawBarChart(canvas, valuesObj) {
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const entries = Object.entries(valuesObj);
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      const padding = 18;
+      const barGap = 10;
+      const barH = Math.floor((h - padding * 2 - barGap * (entries.length - 1)) / entries.length);
+      const max = 100;
+      ctx.globalAlpha = 0.16;
+      ctx.fillRect(padding, padding, w - padding * 2, h - padding * 2);
+      ctx.globalAlpha = 1;
+      ctx.font = "12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
+      ctx.textBaseline = "middle";
+      entries.forEach(([k, v], i) => {
+        const y = padding + i * (barH + barGap);
+        const x0 = padding + 110;
+        const trackW = w - padding - x0;
+        ctx.fillStyle = "rgba(255,255,255,.78)";
+        ctx.fillText(k, padding + 6, y + barH / 2);
+        ctx.fillStyle = "rgba(0,0,0,.22)";
+        ctx.fillRect(x0, y, trackW, barH);
+        const bw = Math.max(0, Math.min(trackW, (v / max) * trackW));
+        ctx.fillStyle = "rgba(242, 216, 140, .92)";
+        ctx.fillRect(x0, y, bw, barH);
+        ctx.fillStyle = "rgba(255,255,255,.9)";
+        ctx.fillText(String(v), x0 + trackW + 8, y + barH / 2);
+      });
+    }
+
+    function drawRadar(canvas, valuesObj) {
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const keys = Object.keys(valuesObj);
+      const vals = keys.map(k => valuesObj[k]);
+      const w = canvas.width, h = canvas.height;
+      const cx = w / 2, cy = h / 2;
+      const r = Math.min(w, h) * 0.34;
+      ctx.clearRect(0, 0, w, h);
+      ctx.translate(0.5, 0.5);
+      const levels = 5;
+      for (let lv = 1; lv <= levels; lv++) {
+        const rr = (r * lv) / levels;
+        ctx.beginPath();
+        keys.forEach((_, i) => {
+          const ang = (Math.PI * 2 * i) / keys.length - Math.PI / 2;
+          const x = cx + Math.cos(ang) * rr;
+          const y = cy + Math.sin(ang) * rr;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.closePath();
+        ctx.strokeStyle = "rgba(255,255,255,.18)";
+        ctx.stroke();
+      }
+      ctx.font = "12px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,.75)";
+      keys.forEach((k, i) => {
+        const ang = (Math.PI * 2 * i) / keys.length - Math.PI / 2;
+        const x = cx + Math.cos(ang) * (r + 18);
+        const y = cy + Math.sin(ang) * (r + 18);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r);
+        ctx.strokeStyle = "rgba(255,255,255,.14)";
+        ctx.stroke();
+        ctx.fillText(k, x - 18, y);
+      });
+      ctx.beginPath();
+      vals.forEach((v, i) => {
+        const ratio = Math.max(0, Math.min(1, v / 100));
+        const ang = (Math.PI * 2 * i) / keys.length - Math.PI / 2;
+        const x = cx + Math.cos(ang) * (r * ratio);
+        const y = cy + Math.sin(ang) * (r * ratio);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = "rgba(255, 182, 193, .25)";
+      ctx.strokeStyle = "rgba(242, 216, 140, .9)";
+      ctx.lineWidth = 2;
+      ctx.fill();
+      ctx.stroke();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+  </script>
+
+  <!-- Modified Logic to use inlined functions -->
+  <script>
     document.getElementById("goAnalyze").onclick = () => {
       location.hash = "#survey";
     };
 
     document.getElementById("goResult").onclick = () => {
       const r = loadResult();
-      if (!r) return appToast("目前沒有結果，先去分析一次");
+      if (!r) return toast("目前沒有結果，先去分析一次");
       location.hash = "#result";
     };
-  </script>
-
-  <script type="module">
-    import { toast as appToast } from "./assets/app.js";
 
     const form = document.getElementById("surveyForm");
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-
       const fd = new FormData(form);
       const survey = {
+        age: fd.get("age"),
         skinType: fd.get("skinType"),
+        sensitivity: fd.get("sensitivity"),
+        routine: fd.get("routine"),
         sleep: fd.get("sleep"),
-        makeup: fd.get("makeup"),
-        concerns: fd.getAll("concerns"),
+        stress: fd.get("stress"),
+        exercise: fd.get("exercise"),
+        foodOil: fd.get("foodOil"), // optional
+        foodVeg: fd.get("foodVeg"), // optional
         timestamp: new Date().toISOString()
       };
-
       localStorage.setItem("survey", JSON.stringify(survey));
-
-      appToast("問卷已保存，準備拍照…");
+      toast("問卷已保存，準備拍照…");
       setTimeout(() => location.hash = "#analyze", 450);
     });
-  </script>
-
-  <script type="module">
-    import { doLogin, logout, toast as appToast, isLoggedIn } from "./assets/app.js";
 
     const u = document.getElementById("u");
     const p = document.getElementById("p");
-
     document.getElementById("loginBtn").onclick = async () => {
       const r = await doLogin(u.value, p.value);
-      if (!r.ok) return appToast(r.message || "登入失敗");
-      appToast(r.mock ? "Mock 登入成功（目前無後端）" : "登入成功");
+      if (!r.ok) return toast(r.message || "登入失敗");
+      toast(r.mock ? "Mock 登入成功（目前無後端）" : "登入成功");
       setTimeout(() => location.hash = "#home", 450);
     };
 
     document.getElementById("logoutBtn").onclick = () => logout();
-
-    if (isLoggedIn()) appToast("你目前已登入");
+    if (isLoggedIn()) toast("你目前已登入");
   </script>
+
   <script type="module">
     import {
       FaceLandmarker,
@@ -1656,6 +2259,41 @@
       meshCtx.stroke();
     }
 
+    // --- 新增：臉部對位判斷邏輯 ---
+    function checkAlignment(landmarks) {
+      if (!landmarks || landmarks.length === 0) return { status: false, msg: "未偵測到臉部" };
+
+      // MediaPipe 關鍵點：1=鼻頭, 234=右臉頰邊緣, 454=左臉頰邊緣
+      const nose = landmarks[1];
+      const rightCheek = landmarks[234];
+      const leftCheek = landmarks[454];
+
+      // 1. 判斷是否置中 (x, y 座標介於 0.35 ~ 0.65 算中間)
+      // 注意：鏡像翻轉後，x 邏輯可能要反過來看，但求中間值不影響
+      const isCenteredX = nose.x > 0.4 && nose.x < 0.6;
+      const isCenteredY = nose.y > 0.35 && nose.y < 0.75; // 允許稍微偏下一點
+
+      if (!isCenteredX || !isCenteredY) {
+        return { status: false, msg: "請將臉部移至框框中央" };
+      }
+
+      // 2. 判斷距離 (太遠或太近)
+      // 計算左右臉頰的水平距離 (寬度)
+      const faceWidth = Math.abs(leftCheek.x - rightCheek.x);
+
+      // 數值需要依據你的 #faceGuide 大小微調
+      // 假設：寬度小於 0.35 代表太遠，大於 0.65 代表太近
+      if (faceWidth < 0.35) {
+        return { status: false, msg: "太遠了，請靠近一點" };
+      }
+      if (faceWidth > 0.65) {
+        return { status: false, msg: "太近了，請後退一點" };
+      }
+
+      // 都通過
+      return { status: true, msg: "完美！請按下拍照" };
+    }
+
     function loop() {
       if (!running) return;
 
@@ -1669,6 +2307,32 @@
         const result = faceLandmarker.detectForVideo(video, now);
         drawEffect(result);
         lastMetrics = packMetrics(result);
+
+        // --- 新增：執行對位檢查 ---
+        const faceGuide = document.getElementById("faceGuide");
+        // const hintEl = document.getElementById("hint"); // 變數名稱為 hint
+        const btn = document.getElementById("captureBtn");
+
+        let alignment = { status: false, msg: "偵測中..." };
+
+        if (result.faceLandmarks && result.faceLandmarks.length > 0) {
+          alignment = checkAlignment(result.faceLandmarks[0]);
+        } else {
+          alignment = { status: false, msg: "請將臉部對準鏡頭" };
+        }
+
+        // 更新 UI 狀態
+        if (hint) hint.textContent = alignment.msg;
+
+        if (alignment.status) {
+          faceGuide.classList.add("valid"); // 框框變綠
+          btn.classList.add("ready");       // 按鈕變亮可按
+        } else {
+          faceGuide.classList.remove("valid");
+          btn.classList.remove("ready");
+        }
+        // -------------------------
+
       } catch (e) {
         console.error("effect error:", e);
         meshCtx.clearRect(0, 0, meshCanvas.width, meshCanvas.height);
